@@ -81,6 +81,8 @@ class Calendar {
 
         // checkboxes
         this.checkboxes = {"run" : "#FFFF00", "jog": "#000000", "lift" : "#00FF00"}
+        this.mouse_x = 0;
+        this.mouse_y = 0;
     }
 
     set_viewport = () => {
@@ -127,23 +129,35 @@ class Calendar {
                                               this.staging_canvas.width * this.viewport_scale, 
                                               this.staging_canvas.height * this.viewport_scale);
     }
+
+    set_interact_position = (e) => {
+        // Track where the current mouse position is
+        this.mouse_x = e.clientX
+        this.mouse_y = e.clientY
+    }
     
     update_scale = (e) => {
-        // TODO: Make scaling relative to mouse position
+        // Translate the current mouse position to a reference position in the calendar frame
+        const [original_x, original_y] = mouse_to_scaled_translated_canvas(this.mouse_x, this.mouse_y, this.viewport_x, this.viewport_y, this.viewport_scale);
         
         // Update scale from y scroll
-        this.viewport_scale += (e.deltaY / 500)
+        this.viewport_scale += (e.deltaY / 500);
         // Clamp scroll value
         if (this.viewport_scale <= 0.05){
             this.viewport_scale = 0.05
         } else if (this.viewport_scale >= 3){
             this.viewport_scale = 3
         }
+
+        // Translate the reference position in the calendar frame back into the mouse frame to see where it now exists after the scale
+        const new_x = ((original_x * this.viewport_scale) + this.viewport_x);
+        const new_y = ((original_y * this.viewport_scale) + this.viewport_y);
         // Set localStorage
         localStorage["view_scale"] = this.viewport_scale
-        // clamp the used position by proxy of update_offset (used so that new values are saved to localStorage)
-        this.update_offset(0,0);
-        this.render_page()
+        
+        // Update the viewport offet by the difference in reference position by scaling so that the reference position stays constant. 
+        this.update_offset(this.mouse_x - new_x, this.mouse_y - new_y);
+        this.render_page();
     }
 
     update_offset = (delta_x, delta_y) => {

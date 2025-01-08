@@ -61,6 +61,7 @@ function register_event_handlers(calendar) {
 
   // Track mouse movement
   window.ontouchmove = window.onmousemove = (e) => {
+    calendar.set_interact_position(e);
     if (!drag_in_progress){
       return;
     }
