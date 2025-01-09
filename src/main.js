@@ -1,9 +1,13 @@
 import { Calendar } from "./components/calendar.js"
+import { CalendarData } from "./components/calendar_data.js"
 
 function main() {
+    this.calendar_data = new CalendarData()
+    this.calendar_data.initialize_new(2025)
+
     // Pull the calendar canvas and create the calendar object
     const calendar_canvas_div = document.getElementById("calendar-canvas");
-    var calendar = new Calendar(calendar_canvas_div);
+    var calendar = new Calendar(calendar_canvas_div, this.calendar_data);
 
     // Temporary data for testing. 
     const day_info = {"text" : "ANsddjasd \n skjdasd \n asjd", 
@@ -21,14 +25,10 @@ function main() {
     console.log(month_info)
 
     // Draw a day
-    calendar.draw_day(200, 500, 1, day_info, "black", "#14ff2c21");
-    calendar.draw_day(500, 500, 2, day_info_2, "black");
-    // calendar.draw_month(0, 0, 1, 2025, 31, month_info, "black");
-    // calendar.draw_month(300 * 7, 0, 2, 2025, 28, month_info, "black");
-    // calendar.draw_month(300 * 14, 0, 3, 2025, 31, month_info, "black");
-    // calendar.draw_month(0, 300*6, 4, 2025, 30, month_info, "black");
-    // calendar.draw_month(300 * 7, 300*6, 5, 2025, 31, month_info, "black");
-    // calendar.draw_month(300 * 14, 300*6, 6, 2025, 30, month_info, "black");
+    // calendar.draw_day(200, 500, 1, day_info, "black", "#14ff2c21");
+    // calendar.draw_day(500, 500, 2, day_info_2, "black");
+    calendar.draw_year(0, 0, this.calendar_data.year_data["2025"],
+                       "black", "green", "#00ff0030");
 
     // Render the display
     calendar.render_page();

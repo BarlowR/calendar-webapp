@@ -1,8 +1,10 @@
+import { CalendarData, month_name_mapping} from "./calendar_data.js"
+
 const canvas_dim = 2000
 const screen_offset_clamp_buffer = 100;
 const day_size = 300; 
 const default_line_width = 6;
-const month_padding = 100;
+const month_padding = 10;
 function pu (unit) {
     return (unit * day_size/100)
 };
@@ -46,7 +48,9 @@ function starting_weekday(month, year) {
 }
 
 class Calendar {
-    constructor(cal_div) {
+    constructor(cal_div, calendar_data) {
+        this.calendar_data = calendar_data
+
         // Display canvas (whole screen) setup
         this.display_canvas = cal_div;
         this.display_canvas_context = this.display_canvas.getContext("2d");
@@ -80,7 +84,6 @@ class Calendar {
         this.click_functions = []
 
         // checkboxes
-        this.checkboxes = {"run" : "#FFFF00", "jog": "#000000", "lift" : "#00FF00"}
         this.mouse_x = 0;
         this.mouse_y = 0;
     }
@@ -141,7 +144,7 @@ class Calendar {
         const [original_x, original_y] = mouse_to_scaled_translated_canvas(this.mouse_x, this.mouse_y, this.viewport_x, this.viewport_y, this.viewport_scale);
         
         // Update scale from y scroll
-        this.viewport_scale += (e.deltaY / 500);
+        this.viewport_scale -= (e.deltaY / 2000);
         // Clamp scroll value
         if (this.viewport_scale <= 0.05){
             this.viewport_scale = 0.05
@@ -236,6 +239,7 @@ class Calendar {
             ctx.fillRect(x, y , day_size, day_size)
         }
         
+        ctx.beginPath();
         ctx.fillStyle = color;
         ctx.textBaseline = 'top';
         ctx.textAlign = 'left';
@@ -260,9 +264,9 @@ class Calendar {
         var checkbox_y = y + pu(5);
         const checkbox_x = x + day_size - pu(15);
         const checkbox_width = pu(10);
-        for (const checkbox_type in this.checkboxes){
+        for (const checkbox_type in this.calendar_data.checkboxes){
             if (info["checkboxes"].includes(checkbox_type)){
-                ctx.fillStyle = this.checkboxes[checkbox_type];
+                ctx.fillStyle = this.calendar_data.checkboxes[checkbox_type];
                 ctx.fillRect(checkbox_x, checkbox_y, checkbox_width, checkbox_width);
             }
             ctx.beginPath()
@@ -273,7 +277,12 @@ class Calendar {
     }
 
     // draw a calendar month
-    draw_month = (x, y, month_num, year, days, info, color) => {
+    // info should be a CalendarMonthData object
+    draw_month = (x, y, year, info, line_color, month_text_color = "", passed_day_color = "") => {
+        const month_num = info.month
+        if (month_text_color == ""){
+            month_text_color = line_color
+        }
 
         // Indexed to 0 as monday
         const starting_day_of_week = starting_weekday(month_num, year);
@@ -281,14 +290,21 @@ class Calendar {
         var current_day_of_week = starting_day_of_week;
         var current_row = 0;
 
-        for (var day_num = 0; day_num < days; day_num++){
+        for (var day_num = 1; day_num < info.days_in_month+1; day_num++){
             const x_pos = x + (current_day_of_week * day_size);
             const y_pos = y + (current_row * day_size);
-            this.draw_day(x_pos, y_pos, day_num + 1, info[day_num], color)
             const this_day = day_num
+            const day_in_consideration = new Date(year, month_num-1, this_day);
+            const yesterday = new Date().setDate(new Date().getDate() - 1);
+            console.log(yesterday)
+            if (yesterday > day_in_consideration.getTime() && passed_day_color != ""){
+                this.draw_day(x_pos, y_pos, day_num, info.days[String(day_num)], line_color, passed_day_color)
+            } else {
+                this.draw_day(x_pos, y_pos, day_num, info.days[String(day_num)], line_color)
+            }
             this.register_click_function((x_val, y_val) => {
                 this.check_clicked(x_val, y_val, x_pos, x_pos+day_size, y_pos, y_pos+day_size, () => {
-                        console.log(year, month_num, this_day+1);
+                        console.log(year, month_num, this_day);
                     })
                 })
             
@@ -299,10 +315,42 @@ class Calendar {
             }
         }
 
+        this.staging_context.strokeStyle = line_color;
         this.staging_context.beginPath()
-        this.staging_context.lineWidth = default_line_width;
+        this.staging_context.lineWidth = default_line_width*1.2;
         this.staging_context.strokeRect(x, y, day_size * 7, day_size * 6)
         this.staging_context.stroke()
+
+        if (current_row != 5) {
+            current_day_of_week = 0;
+            current_row = 5;
+        }
+
+        this.staging_context.fillStyle = month_text_color;
+        this.staging_context.textBaseline = 'middle';
+        this.staging_context.textAlign = 'left';
+        this.staging_context.font = String(pu(40)) + "px sans-serif";
+        this.staging_context.fillText(month_name_mapping[month_num], x + (current_day_of_week * day_size) + pu(50), y + (current_row * day_size) + pu(50), day_size * 7, day_size * 6)
+    }
+    // draw a calendar month
+    // info should be a CalendarYearData object. Should probably improve naming of "info"
+    draw_year = (x, y, info, line_color, month_text_color = "", passed_day_color="") => {
+        const year = info.year;
+        const month_width = 7 * day_size + month_padding
+        const month_height = 6 * day_size + month_padding
+        
+        var month_index = 1;
+        for (var current_row = 0; current_row < 3; current_row++){
+            for (var current_col = 0; current_col < 4; current_col++){
+                const month_info = info.months[String(month_index)]
+
+                this.draw_month(x + (current_col * month_width), 
+                                y + (current_row * month_height), 
+                                year, month_info, 
+                                line_color, month_text_color, passed_day_color);
+                month_index++;
+            }
+        }
     }
 }
 
