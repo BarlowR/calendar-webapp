@@ -4,7 +4,7 @@ const canvas_dim = 2000
 const screen_offset_clamp_buffer = 100;
 const day_size = 300; 
 const default_line_width = 6;
-const month_padding = 10;
+const month_padding = 60;
 function pu (unit) {
     return (unit * day_size/100)
 };
@@ -48,9 +48,9 @@ function starting_weekday(month, year) {
 }
 
 class Calendar {
-    constructor(cal_div, calendar_data) {
+    constructor(cal_div, calendar_data, background_color) {
         this.calendar_data = calendar_data
-
+        this.background_color = background_color
         // Display canvas (whole screen) setup
         this.display_canvas = cal_div;
         this.display_canvas_context = this.display_canvas.getContext("2d");
@@ -62,9 +62,9 @@ class Calendar {
         this.staging_context = this.staging_canvas.getContext("2d");
 
         // 7 days width per month, 4 months wide plus month padding
-        this.staging_canvas.width = (day_size * 7) * 4 + (month_padding * 3)
+        this.staging_canvas.width = (day_size * 7) * 4 + (month_padding * 3) + 50 
         // 6 days height per month, 3 months high plus month padding
-        this.staging_canvas.height = (day_size * 6) * 3 + (month_padding * 2)
+        this.staging_canvas.height = (day_size * 6) * 3 + (month_padding * 2) + 50 
 
         // The scaling canvas is used to hold in intermediate scaled version of the canvas when scaling the image down to improve 
         // visual appearance to the user
@@ -72,8 +72,8 @@ class Calendar {
         this.scaling_context = this.scaling_canvas.getContext("2d");
 
         // Same size as the staging canvas
-        this.scaling_canvas.width = (day_size * 7) * 4 + (month_padding * 3)
-        this.scaling_canvas.height = (day_size * 6) * 3 + (month_padding * 2)
+        this.scaling_canvas.width = (day_size * 7) * 4 + (month_padding * 3) + 50 
+        this.scaling_canvas.height = (day_size * 6) * 3 + (month_padding * 2) + 50 
 
         // viewport variables
         this.viewport_x, this.viewport_y, this.viewport_scale
@@ -86,6 +86,9 @@ class Calendar {
         // checkboxes
         this.mouse_x = 0;
         this.mouse_y = 0;
+
+        // scaling cache 
+        this.last_scaling_factor = -1
     }
 
     set_viewport = () => {
@@ -121,16 +124,63 @@ class Calendar {
 
     render_to_display_context = () => {
         // Clear the existing display
-        this.display_canvas_context.fillStyle = "white"
+        this.display_canvas_context.fillStyle = this.background_color
         this.display_canvas_context.fillRect(0,0,this.display_canvas.width, this.display_canvas.height);
+        const final_dim_x = this.staging_canvas.width * this.viewport_scale
+        const final_dim_y = this.staging_canvas.height * this.viewport_scale
 
+        const intermediary_scale_step = 0.8
+        if (this.viewport_scale > this.intermediary_scale_step){
+            this.display_canvas_context.drawImage(this.staging_canvas, 
+                0, 0, intermediary_dim_x, intermediary_dim_y,
+                Math.floor(this.viewport_x),
+                Math.floor(this.viewport_y), 
+                final_dim_x, 
+                final_dim_y);
+        }
+        var intermediary_scale = intermediary_scale_step
+        var intermediary_dim_x = this.staging_canvas.width * intermediary_scale
+        var intermediary_dim_y = this.staging_canvas.height * intermediary_scale
+        
+        this.scaling_context.fillStyle = this.background_color
+        this.scaling_context.fillRect(0,0,this.scaling_canvas.width, this.scaling_canvas.height);
+        this.scaling_context.drawImage(this.staging_canvas, 
+            0, 0, this.staging_canvas.width, this.staging_canvas.height, 
+            0, 0, 
+            intermediary_dim_x, 
+            intermediary_dim_y);  
+
+        var complete = false;
+        while(!complete){
+            const last_step_x = intermediary_dim_x
+            const last_step_y = intermediary_dim_y
+
+            intermediary_dim_x*=intermediary_scale_step;
+            intermediary_dim_y*=intermediary_scale_step;
+
+            if (intermediary_dim_x < final_dim_x){
+                intermediary_dim_x = final_dim_x;
+                intermediary_dim_y = final_dim_y;
+                complete = true;
+            }
+
+            this.scaling_context.drawImage(this.scaling_canvas, 
+                0, 0, last_step_x, last_step_y, 
+                0, 0, 
+                intermediary_dim_x, 
+                intermediary_dim_y);  
+            console.log(final_dim_x, intermediary_dim_x)
+        } 
+        const final_scale = this.viewport_scale
+        this.last_scaling_factor = final_scale
+        
         // Take the image from the staging canvas and draw it on the display canvas, moving and scaling appropriately.
-        this.display_canvas_context.drawImage(this.staging_canvas, 
-                                              0, 0, this.staging_canvas.width, this.staging_canvas.height, 
+        this.display_canvas_context.drawImage(this.scaling_canvas, 
+                                              0, 0, intermediary_dim_x, intermediary_dim_y,
                                               Math.floor(this.viewport_x),
                                               Math.floor(this.viewport_y), 
-                                              this.staging_canvas.width * this.viewport_scale, 
-                                              this.staging_canvas.height * this.viewport_scale);
+                                              final_dim_x, 
+                                              final_dim_y);
     }
 
     set_interact_position = (e) => {
