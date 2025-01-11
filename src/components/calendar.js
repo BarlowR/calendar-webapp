@@ -247,9 +247,7 @@ class Calendar {
         this.render_page()
     }
 
-
     onclick = (e) => {
-
         // translate the mouse position to the position on the calendar
         const [x, y] = mouse_to_scaled_translated_canvas(e.clientX,
                                                       e.clientY,
@@ -308,7 +306,7 @@ class Calendar {
         }
 
         // draw checkboxes
-        this.draw_dy_checkboxes(x, y, info["checkboxes"])
+        this.draw_day_checkboxes(x, y, info["checkboxes"])
         
     }
 
@@ -342,7 +340,7 @@ class Calendar {
         }
     }
 
-    draw_dy_checkboxes = (x, y, day_checkboxes) => {
+    draw_day_checkboxes = (x, y, day_checkboxes) => {
         const ctx = this.staging_context
         const checkbox_y_seperation = pu(15)
         var checkbox_y = y + pu(5);
@@ -350,11 +348,12 @@ class Calendar {
         const checkbox_width = pu(10);
         for (const checkbox_type in this.calendar_data.checkboxes){
             if (day_checkboxes.includes(checkbox_type)){
+                // console.log(checkbox_type, day_checkboxes, this.calendar_data.checkboxes[checkbox_type])
                 ctx.fillStyle = this.calendar_data.checkboxes[checkbox_type];
                 ctx.fillRect(checkbox_x, checkbox_y, checkbox_width, checkbox_width);
             }
             ctx.beginPath()
-            ctx.lineWidth = default_line_width;
+            ctx.lineWidth = default_line_width/2;
             ctx.strokeRect(checkbox_x, checkbox_y, checkbox_width, checkbox_width)
             checkbox_y += checkbox_y_seperation
         }

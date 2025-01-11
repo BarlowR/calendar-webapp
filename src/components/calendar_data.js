@@ -63,12 +63,16 @@ class CalendarData {
     initialize_from_jsons = (json_string) => {
         const json_obj = JSON.parse(json_string);
         // console.log(json_obj.year_data)
-        console.log(json_obj.checkboxes)
-        this.year_data = json_obj.year_data
-        this.checkboxes = json_obj.checkboxes
+        if (json_obj.checkboxes && json_obj.year_data){
+            this.year_data = json_obj.year_data
+            this.checkboxes = json_obj.checkboxes
+        } else {
+            console.log("Bad data")
+        }
     }
-    initialize_new = (year) => {
+    initialize_new = (year, checkboxes = {}) => {
         this.add_new_year(year)
+        this.checkboxes = checkboxes
     }
     add_new_year = (year) => {
         this.year_data[year] = new CalendarYearData(year)
@@ -81,6 +85,20 @@ class CalendarData {
     }
     save_to_jsons = () => {
         return JSON.stringify(this)
+    }
+    save_to_browser = () => {
+        localStorage["calendar_data"] = this.save_to_jsons()
+    }
+    load_from_browser = () => {
+        const cal_data_string = localStorage.getItem("calendar_data")
+
+        if (!(cal_data_string === null)){
+            this.initialize_from_jsons(cal_data_string)
+            return true
+        }
+        
+        console.log("Could not load from localStorage")
+        return false
     }
 
     get_day_text = (year, month, day) => {
@@ -105,6 +123,32 @@ class CalendarData {
         }
         var day_to_edit = this.year_data[year].months[month].days[day]
         day_to_edit["text"] = new_text
+    }
+
+    get_day_checkboxes = (year, month, day, new_text) => {
+        const month_in_range = (Number(month) > 0 && Number(month) <= 12);
+        const day_in_range = (Number(day) > 0 && Number(day) <= calc_days_in_month(Number(month), Number(year)));
+        if (!month_in_range || !day_in_range){
+            console.log("value not in range:")
+            console.log(year, month, day)
+            console.log(month_in_range, day_in_range)
+            return
+        }
+        var day_to_edit = this.year_data[year].months[month].days[day]
+        return day_to_edit["checkboxes"]
+    }
+
+    set_day_checkboxes = (year, month, day, new_checkbox_list) => {
+        const month_in_range = (Number(month) > 0 && Number(month) <= 12);
+        const day_in_range = (Number(day) > 0 && Number(day) <= calc_days_in_month(Number(month), Number(year)));
+        if (!month_in_range || !day_in_range){
+            console.log("value not in range:")
+            console.log(year, month, day)
+            console.log(month_in_range, day_in_range)
+            return
+        }
+        var day_to_edit = this.year_data[year].months[month].days[day]
+        day_to_edit["checkboxes"] = new_checkbox_list
     }
 }
 

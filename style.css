@@ -10,6 +10,8 @@ body {
   margin: 0;
   padding: 0;
   border: none;
+  height: 100%;
+  width: 100%;
 }
 
 #calendar-canvas{
@@ -36,7 +38,9 @@ body {
   position: absolute;
   left: 400px;
   top: 0;
+  padding: 0;
+  margin: 0;
   background-color: #FFFFFF00;
-  width: 100vw;
-  height: 100vh;
+  width: calc(100% - 400px);
+  height: 100%;
 }

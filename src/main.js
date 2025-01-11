@@ -3,23 +3,12 @@ import { CalendarData } from "./components/calendar_data.js"
 import { DayEntry } from "./components/day_entry.js"
 
 function main() {
-    var calendar_data = new CalendarData()
-    calendar_data.initialize_new(2025)
-    calendar_data.add_new_checkbox("run", "#FF0000")
-    calendar_data.add_new_checkbox("lift", "#F0F000")
-    calendar_data.year_data["2025"].months["2"].days["1"]["checkboxes"] = ["run"]
-    calendar_data.year_data["2025"].months["2"].days["1"]["text"] = "Text\n123456"
-    calendar_data.year_data["2025"].months["1"].days["11"]["checkboxes"] = ["lift"]
-    calendar_data.year_data["2025"].months["1"].days["7"]["checkboxes"] = ["lift"]
-    calendar_data.year_data["2025"].months["8"].days["22"]["checkboxes"] = ["run"]
-
-    const json_calendar_data_string = calendar_data.save_to_jsons()
-    console.log(json_calendar_data_string)
 
     var loaded_calendar_data = new CalendarData()
-    loaded_calendar_data.initialize_from_jsons(json_calendar_data_string)
-    console.log(loaded_calendar_data)
-
+    if (!loaded_calendar_data.load_from_browser()){
+      console.log("Initializing new year")
+      loaded_calendar_data.initialize_new(2025, {"Run": "#51a145", "Lift" : "#f5b32e"})
+    }
     // Pull the calendar canvas and create the calendar object
     const calendar_canvas_div = document.getElementById("calendar-canvas");
     const text_entry_div = document.getElementById("text-entry-sidebar");
@@ -27,7 +16,6 @@ function main() {
     var calendar = new Calendar(calendar_canvas_div, day_entry, loaded_calendar_data, "#e8dec9");
 
     day_entry.set_redraw(calendar.draw)
-
     register_event_handlers(calendar, calendar_canvas_div)
 }
 
