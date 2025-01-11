@@ -60,8 +60,12 @@ class CalendarData {
         this.year_data = {}
         this.checkboxes = {}
     }
-    initialize_from_json = (json_path) => {
-        return
+    initialize_from_jsons = (json_string) => {
+        const json_obj = JSON.parse(json_string);
+        // console.log(json_obj.year_data)
+        console.log(json_obj.checkboxes)
+        this.year_data = json_obj.year_data
+        this.checkboxes = json_obj.checkboxes
     }
     initialize_new = (year) => {
         this.add_new_year(year)
@@ -74,6 +78,33 @@ class CalendarData {
     }
     remove_checkbox = (checkbox_name) => {
         delete this.checkboxes[checkbox_name]
+    }
+    save_to_jsons = () => {
+        return JSON.stringify(this)
+    }
+
+    get_day_text = (year, month, day) => {
+        const month_in_range = (Number(month) > 0 && Number(month) <= 12);
+        const day_in_range = (Number(day) > 0 && Number(day) <= calc_days_in_month(Number(month), Number(year)));
+        if (!(year in this.year_data) || !month_in_range || !day_in_range){
+            console.log("value not in range")
+            return
+        }
+        var day_to_edit = this.year_data[year].months[month].days[day]
+        return day_to_edit["text"]
+    }
+
+    set_day_text = (year, month, day, new_text) => {
+        const month_in_range = (Number(month) > 0 && Number(month) <= 12);
+        const day_in_range = (Number(day) > 0 && Number(day) <= calc_days_in_month(Number(month), Number(year)));
+        if (!month_in_range || !day_in_range){
+            console.log("value not in range:")
+            console.log(year, month, day)
+            console.log(month_in_range, day_in_range)
+            return
+        }
+        var day_to_edit = this.year_data[year].months[month].days[day]
+        day_to_edit["text"] = new_text
     }
 }
 

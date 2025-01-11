@@ -1,39 +1,43 @@
 import { Calendar } from "./components/calendar.js"
 import { CalendarData } from "./components/calendar_data.js"
+import { DayEntry } from "./components/day_entry.js"
 
 function main() {
-    this.calendar_data = new CalendarData()
-    this.calendar_data.initialize_new(2025)
-    this.calendar_data.add_new_checkbox("run", "#FF0000")
-    this.calendar_data.add_new_checkbox("lift", "#F0F000")
-    this.calendar_data.year_data["2025"].months["2"].days["1"]["checkboxes"] = ["run"]
-    this.calendar_data.year_data["2025"].months["2"].days["1"]["text"] = "Text\n123456"
-    this.calendar_data.year_data["2025"].months["1"].days["11"]["checkboxes"] = ["lift"]
-    this.calendar_data.year_data["2025"].months["1"].days["7"]["checkboxes"] = ["lift"]
-    this.calendar_data.year_data["2025"].months["8"].days["22"]["checkboxes"] = ["run"]
+    var calendar_data = new CalendarData()
+    calendar_data.initialize_new(2025)
+    calendar_data.add_new_checkbox("run", "#FF0000")
+    calendar_data.add_new_checkbox("lift", "#F0F000")
+    calendar_data.year_data["2025"].months["2"].days["1"]["checkboxes"] = ["run"]
+    calendar_data.year_data["2025"].months["2"].days["1"]["text"] = "Text\n123456"
+    calendar_data.year_data["2025"].months["1"].days["11"]["checkboxes"] = ["lift"]
+    calendar_data.year_data["2025"].months["1"].days["7"]["checkboxes"] = ["lift"]
+    calendar_data.year_data["2025"].months["8"].days["22"]["checkboxes"] = ["run"]
+
+    const json_calendar_data_string = calendar_data.save_to_jsons()
+    console.log(json_calendar_data_string)
+
+    var loaded_calendar_data = new CalendarData()
+    loaded_calendar_data.initialize_from_jsons(json_calendar_data_string)
+    console.log(loaded_calendar_data)
+
     // Pull the calendar canvas and create the calendar object
     const calendar_canvas_div = document.getElementById("calendar-canvas");
-    var calendar = new Calendar(calendar_canvas_div, this.calendar_data, "#e8dec9");
+    const text_entry_div = document.getElementById("text-entry-sidebar");
+    var day_entry = new DayEntry(text_entry_div, loaded_calendar_data)
+    var calendar = new Calendar(calendar_canvas_div, day_entry, loaded_calendar_data, "#e8dec9");
 
+    day_entry.set_redraw(calendar.draw)
 
-    // Draw a day
-    // calendar.draw_day(200, 500, 1, day_info, "black", "#14ff2c21");
-    // calendar.draw_day(500, 500, 2, day_info_2, "black");
-    calendar.draw_year(5, 5, this.calendar_data.year_data["2025"],
-                       "black", "green", "#00ff0030");
-
-    // Render the display
-    calendar.render_page();
-    register_event_handlers(calendar)
+    register_event_handlers(calendar, calendar_canvas_div)
 }
 
-function register_event_handlers(calendar) {
+function register_event_handlers(calendar, calendar_canvas) {
   // Register event handlers
   var drag_in_progress = false;
   var start_x, start_y;
 
   // Begin dragging if the user touches or clicks
-  window.ontouchstart = window.onmousedown = (e) => {
+  calendar_canvas.ontouchstart = calendar_canvas.onmousedown = (e) => {
     drag_in_progress = true;
     start_x = e.clientX;
     start_y = e.clientY;

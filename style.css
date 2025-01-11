@@ -14,8 +14,29 @@ body {
 
 #calendar-canvas{
   width: 100%;
+  min-width: 800px;
   height: 100%;
   margin: 0;
   padding: 0;
   border: none;
+}
+
+#text-entry-sidebar{
+  display:none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: white;
+  width: 400px;
+  height: 100%;
+}
+
+#day-click-capture{
+  display: none;
+  position: absolute;
+  left: 400px;
+  top: 0;
+  background-color: #FFFFFF00;
+  width: 100vw;
+  height: 100vh;
 }

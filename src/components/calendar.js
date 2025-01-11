@@ -48,7 +48,8 @@ function starting_weekday(month, year) {
 }
 
 class Calendar {
-    constructor(cal_div, calendar_data, background_color) {
+    constructor(cal_div, day_entry, calendar_data, background_color) {
+        this.day_entry = day_entry
         this.calendar_data = calendar_data
         this.background_color = background_color
         // Display canvas (whole screen) setup
@@ -89,6 +90,8 @@ class Calendar {
 
         // scaling cache 
         this.last_scaling_factor = -1
+
+        this.draw()
     }
 
     set_viewport = () => {
@@ -129,7 +132,7 @@ class Calendar {
         const final_dim_x = this.staging_canvas.width * this.viewport_scale
         const final_dim_y = this.staging_canvas.height * this.viewport_scale
 
-        const intermediary_scale_step = 0.8
+        const intermediary_scale_step = 0.6
         if (this.viewport_scale > this.intermediary_scale_step){
             this.display_canvas_context.drawImage(this.staging_canvas, 
                 0, 0, intermediary_dim_x, intermediary_dim_y,
@@ -169,7 +172,6 @@ class Calendar {
                 0, 0, 
                 intermediary_dim_x, 
                 intermediary_dim_y);  
-            console.log(final_dim_x, intermediary_dim_x)
         } 
         const final_scale = this.viewport_scale
         this.last_scaling_factor = final_scale
@@ -220,8 +222,8 @@ class Calendar {
         // clamp the viewport position so that some part of the calendar is always in view
         this.clamp_offset()
         // Save new values to localStorage
-        localStorage["view_x"] = this.viewport_x
-        localStorage["view_y"] = this.viewport_y
+        localStorage["view_x"] = this.viewport_x;
+        localStorage["view_y"] = this.viewport_y;
 
     }
 
@@ -247,6 +249,7 @@ class Calendar {
 
 
     onclick = (e) => {
+
         // translate the mouse position to the position on the calendar
         const [x, y] = mouse_to_scaled_translated_canvas(e.clientX,
                                                       e.clientY,
@@ -254,17 +257,20 @@ class Calendar {
                                                      this.viewport_y, 
                                                      this.viewport_scale)
         // Call all of the registered click functions with x and y positions of the click.
-        for (var i = 0; i < this.click_functions.length; i++){
-            // This feels disgusting
-            this.click_functions[i](x, y);
+        for (var id of Object.keys(this.click_functions)){
+            this.click_functions[id](x, y);
         }
     }
 
     // register an onclick function. function should have the signature f(x, y).
-    register_click_function = (f) => {
+    register_click_function = (f, id) => {
 
-        this.click_functions.push(f)
-        return (this.click_functions.length - 1)
+        this.click_functions[id] = f
+        return id
+    }
+    // delete an onclick function.
+    remove_click_function = (id) => {
+        delete this.click_functions[id]
     }
 
     // function to check if an x,y pair in within a rectangular region
@@ -296,26 +302,54 @@ class Calendar {
         ctx.font = String(pu(16)) + "px sans-serif";
         ctx.beginPath()
         ctx.fillText(String(day_num), x + pu(5), y + pu(5))
-    
-        const text_lines = info["text"].split(/\r?\n|\r|\n/g);
-
-        ctx.font = String(pu(10)) + "px sans-serif";
         
-        const line_seperation = pu(10)
-        var current_line = y + pu(25) 
-        for (var line of text_lines){
+        if (info["text"]){
+            this.draw_day_text(x, y, info["text"])
+        }
+
+        // draw checkboxes
+        this.draw_dy_checkboxes(x, y, info["checkboxes"])
+        
+    }
+
+    draw_day_text = (x, y, text) => {
+        const ctx = this.staging_context
+        const text_lines = text.split(/\r?\n|\r|\n/g);
+        var current_line = y + pu(95) 
+        ctx.textBaseline = 'bottom';
+        for (var line of text_lines.reverse()){
+
+            var line_height = pu(10);
+            if (line.includes("###")) {
+                line_height = pu(10);
+                line = line.substring(3)
+            }
+            else if (line.includes("##")) {
+                line_height = pu(14);
+                line = line.substring(2)
+            }
+            else if (line.includes("#")) {
+                line_height = pu(16);
+                line = line.substring(1)
+            } 
+            if (line.charAt(0) == " ") { line = line.substring(1);}
+            ctx.font = String(line_height) + "px sans-serif";
+                
             ctx.fillText(line, 
                 x + pu(5),
                 current_line)
-            current_line += line_seperation;
+            current_line -= line_height;
         }
+    }
 
+    draw_dy_checkboxes = (x, y, day_checkboxes) => {
+        const ctx = this.staging_context
         const checkbox_y_seperation = pu(15)
         var checkbox_y = y + pu(5);
         const checkbox_x = x + day_size - pu(15);
         const checkbox_width = pu(10);
         for (const checkbox_type in this.calendar_data.checkboxes){
-            if (info["checkboxes"].includes(checkbox_type)){
+            if (day_checkboxes.includes(checkbox_type)){
                 ctx.fillStyle = this.calendar_data.checkboxes[checkbox_type];
                 ctx.fillRect(checkbox_x, checkbox_y, checkbox_width, checkbox_width);
             }
@@ -339,24 +373,25 @@ class Calendar {
 
         var current_day_of_week = starting_day_of_week;
         var current_row = 0;
-
         for (var day_num = 1; day_num < info.days_in_month+1; day_num++){
             const x_pos = x + (current_day_of_week * day_size);
             const y_pos = y + (current_row * day_size);
             const this_day = day_num
             const day_in_consideration = new Date(year, month_num-1, this_day);
             const yesterday = new Date().setDate(new Date().getDate() - 1);
-            console.log(yesterday)
+            var button_id = String(month_num) + "-" + String(this_day)
             if (yesterday > day_in_consideration.getTime() && passed_day_color != ""){
                 this.draw_day(x_pos, y_pos, day_num, info.days[String(day_num)], line_color, passed_day_color)
             } else {
                 this.draw_day(x_pos, y_pos, day_num, info.days[String(day_num)], line_color)
             }
+
+            // Button ID is used so that when draw_month is called by redraw(), the existing bindings are removed
             this.register_click_function((x_val, y_val) => {
                 this.check_clicked(x_val, y_val, x_pos, x_pos+day_size, y_pos, y_pos+day_size, () => {
-                        console.log(year, month_num, this_day);
+                        this.edit_menu(year, month_num, this_day);
                     })
-                })
+                }, button_id)
             
             current_day_of_week += 1;
             if ((current_day_of_week % 7) == 0){
@@ -401,6 +436,27 @@ class Calendar {
                 month_index++;
             }
         }
+    }
+
+    draw = () =>{
+        // debounce
+        if (this.scheduled_redraw){
+            return;
+        }
+        this.scheduled_redraw = true;
+        console.log("redrawing");
+        requestAnimationFrame(() => {
+            this.staging_context.fillStyle = this.background_color
+            this.staging_context.fillRect(0,0,this.staging_canvas.width, this.staging_canvas.height);
+            this.draw_year(5, 5, this.calendar_data.year_data["2025"],
+                "black", "green", "#00ff0030");
+            this.scheduled_redraw = false;
+            this.render_page()
+        });
+    }
+
+    edit_menu = (year, month, day) => {
+        this.day_entry.open_sidebar(year, month, day);
     }
 }
 
