@@ -10,6 +10,16 @@ function pu (unit) {
 };
 const default_font = "Tahoma"
 
+const weekday_num_to_str = [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+]
+
 function mouse_to_scaled_translated_canvas( mouse_x, 
                                             mouse_y, 
                                             translation_x,
@@ -280,7 +290,7 @@ class Calendar {
     }
 
     // draw a single calendar day. 
-    draw_day = (x, y, day_num, info, color, in_the_past = "") => {
+    draw_day = (x, y, day_num, day_of_week_text, info, color, in_the_past = "") => {
         
         const ctx = this.staging_context
 
@@ -301,6 +311,9 @@ class Calendar {
         ctx.font = String(pu(16)) + "px " + default_font;
         ctx.beginPath()
         ctx.fillText(String(day_num), x + pu(5), y + pu(5))
+        ctx.font = String(pu(10)) + "px " + default_font;
+        ctx.fillText(day_of_week_text, x + pu(5), y + pu(22))
+        
         
         if (info["text"]){
             this.draw_day_text(x, y, info["text"])
@@ -380,10 +393,14 @@ class Calendar {
             const day_in_consideration = new Date(year, month_num-1, this_day);
             const yesterday = new Date().setDate(new Date().getDate() - 1);
             var button_id = String(month_num) + "-" + String(this_day)
+            var day_of_week_string = ""
+            if (day_num<=7){
+                day_of_week_string = weekday_num_to_str[current_day_of_week]
+            }
             if (yesterday > day_in_consideration.getTime() && passed_day_color != ""){
-                this.draw_day(x_pos, y_pos, day_num, info.days[String(day_num)], line_color, passed_day_color)
+                this.draw_day(x_pos, y_pos, this_day, day_of_week_string, info.days[String(day_num)], line_color, passed_day_color)
             } else {
-                this.draw_day(x_pos, y_pos, day_num, info.days[String(day_num)], line_color)
+                this.draw_day(x_pos, y_pos, this_day, day_of_week_string, info.days[String(day_num)], line_color)
             }
 
             // Button ID is used so that when draw_month is called by redraw(), the existing bindings are removed
