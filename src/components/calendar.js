@@ -9,6 +9,17 @@ function pu (unit) {
     return (unit * day_size/100)
 };
 const default_font = "Tahoma"
+const day_of_week_header = pu(25);
+
+const weekday_num_to_str = [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+]
 
 function mouse_to_scaled_translated_canvas( mouse_x, 
                                             mouse_y, 
@@ -65,7 +76,7 @@ class Calendar {
         // 7 days width per month, 4 months wide plus month padding
         this.staging_canvas.width = (day_size * 7) * 4 + (month_padding * 3) + 50 
         // 6 days height per month, 3 months high plus month padding
-        this.staging_canvas.height = (day_size * 6) * 3 + (month_padding * 2) + 50 
+        this.staging_canvas.height = (day_size * 6 + day_of_week_header) * 3 + (month_padding * 2) + 50 
 
         // The scaling canvas is used to hold in intermediate scaled version of the canvas when scaling the image down to improve 
         // visual appearance to the user
@@ -368,6 +379,18 @@ class Calendar {
             month_text_color = line_color
         }
 
+        for (var day_of_week = 0; day_of_week < 7; day_of_week ++){
+            this.staging_context.strokeStyle = line_color;
+            this.staging_context.beginPath()
+            this.staging_context.lineWidth = default_line_width;
+            this.staging_context.strokeRect(x + (day_of_week * day_size), y, day_size, day_of_week_header)
+            this.staging_context.stroke()
+            this.staging_context.fillStyle = this.calendar_data.visuals["month_text_color"]
+            this.staging_context.textBaseline = 'middle';
+            this.staging_context.textAlign = 'left';
+            this.staging_context.font = String(pu(15)) + "px " + default_font;
+            this.staging_context.fillText(weekday_num_to_str[day_of_week], x + (day_of_week * day_size + pu(10)), y + day_of_week_header - pu(11))
+        }
         // Indexed to 0 as monday
         const starting_day_of_week = starting_weekday(month_num, year);
 
@@ -375,7 +398,7 @@ class Calendar {
         var current_row = 0;
         for (var day_num = 1; day_num < info.days_in_month+1; day_num++){
             const x_pos = x + (current_day_of_week * day_size);
-            const y_pos = y + (current_row * day_size);
+            const y_pos = y + day_of_week_header + (current_row * day_size);
             const this_day = day_num
             const day_in_consideration = new Date(year, month_num-1, this_day);
             const yesterday = new Date().setDate(new Date().getDate() - 1);
@@ -403,7 +426,7 @@ class Calendar {
         this.staging_context.strokeStyle = line_color;
         this.staging_context.beginPath()
         this.staging_context.lineWidth = default_line_width*1.2;
-        this.staging_context.strokeRect(x, y, day_size * 7, day_size * 6)
+        this.staging_context.strokeRect(x, y, day_size * 7, day_size * 6 + day_of_week_header)
         this.staging_context.stroke()
 
         if (current_row != 5) {
@@ -415,15 +438,14 @@ class Calendar {
         this.staging_context.textBaseline = 'middle';
         this.staging_context.textAlign = 'left';
         this.staging_context.font = String(pu(40)) + "px " + default_font;
-        this.staging_context.fillText(month_name_mapping[month_num], x + (current_day_of_week * day_size) + pu(50), y + (current_row * day_size) + pu(50), day_size * 7, day_size * 6)
+        this.staging_context.fillText(month_name_mapping[month_num], x + (current_day_of_week * day_size) + pu(50), y + day_of_week_header + (current_row * day_size) + pu(50), day_size * 7, day_size * 6)
     }
     // draw a calendar month
     // info should be a CalendarYearData object. Should probably improve naming of "info"
     draw_year = (x, y, info, line_color, month_text_color = "", passed_day_color="") => {
         const year = info.year;
         const month_width = 7 * day_size + month_padding
-        const month_height = 6 * day_size + month_padding
-        
+        const month_height = 6 * day_size + month_padding + day_of_week_header        
         var month_index = 1;
         for (var current_row = 0; current_row < 3; current_row++){
             for (var current_col = 0; current_col < 4; current_col++){
