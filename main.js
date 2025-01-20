@@ -21,7 +21,7 @@ function main() {
   const calendar_canvas_div = document.getElementById("calendar-canvas");
   const text_entry_div = document.getElementById("text-entry-sidebar");
   var day_entry = new DayEntry(text_entry_div, calendar_data, file_handler)
-  var calendar = new Calendar(calendar_canvas_div, day_entry, calendar_data, "#e8dec9");
+  var calendar = new Calendar(calendar_canvas_div, day_entry, calendar_data);
   day_entry.set_redraw(calendar.draw)
   
   // Set the data handler redraw callback

@@ -49,10 +49,9 @@ function starting_weekday(month, year) {
 }
 
 class Calendar {
-    constructor(cal_div, day_entry, calendar_data, background_color) {
+    constructor(cal_div, day_entry, calendar_data) {
         this.day_entry = day_entry
         this.calendar_data = calendar_data
-        this.background_color = background_color
         // Display canvas (whole screen) setup
         this.display_canvas = cal_div;
         this.display_canvas_context = this.display_canvas.getContext("2d");
@@ -128,7 +127,7 @@ class Calendar {
 
     render_to_display_context = () => {
         // Clear the existing display
-        this.display_canvas_context.fillStyle = this.background_color
+        this.display_canvas_context.fillStyle = this.calendar_data.visuals["background_color"]
         this.display_canvas_context.fillRect(0,0,this.display_canvas.width, this.display_canvas.height);
         const final_dim_x = this.staging_canvas.width * this.viewport_scale
         const final_dim_y = this.staging_canvas.height * this.viewport_scale
@@ -147,7 +146,7 @@ class Calendar {
         var intermediary_dim_x = this.staging_canvas.width * intermediary_scale
         var intermediary_dim_y = this.staging_canvas.height * intermediary_scale
         
-        this.scaling_context.fillStyle = this.background_color
+        this.scaling_context.fillStyle = this.calendar_data.visuals["background_color"]
         this.scaling_context.fillRect(0,0,this.scaling_canvas.width, this.scaling_canvas.height);
         this.scaling_context.drawImage(this.staging_canvas, 
             0, 0, this.staging_canvas.width, this.staging_canvas.height, 
@@ -447,7 +446,7 @@ class Calendar {
         this.scheduled_redraw = true;
         console.log("redrawing");
         requestAnimationFrame(() => {
-            this.staging_context.fillStyle = this.background_color
+            this.staging_context.fillStyle = this.calendar_data.visuals["background_color"];
             this.staging_context.fillRect(0,0,this.staging_canvas.width, this.staging_canvas.height);
             this.draw_year(5, 5, this.calendar_data.year_data["2025"],
                 this.calendar_data.visuals["line_color"],
