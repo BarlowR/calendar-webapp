@@ -133,6 +133,7 @@ class DayEntry {
     const container = document.createElement('div')
     container.className = 'checkbox-row'
 
+
     const label = document.createElement('div')
     label.className = 'checkbox-label'
     label.innerText = name
@@ -140,6 +141,7 @@ class DayEntry {
     const checkbox = document.createElement('input')
     checkbox.type = 'checkbox'
     checkbox.id = this.cbx_name(name)
+    checkbox.className = "checkbox-entry";
     checkbox.checked = checked
     checkbox.style.accentColor = color
 

@@ -28,10 +28,76 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  background-color: white;
-  width: 400px;
-  height: 100%;
+  background-color: rgba(255,255,255,0.9);
+  width: 300px;
+  height: 100vh;
 }
+
+#text-entry-display{
+  padding: 20px; 
+  font-family: "Tahoma";
+}
+
+#text-entry-date{
+  font-size: 30px;
+  padding: 5px;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid black;
+  text-align: center;
+}
+
+#day-text-entry{
+  box-sizing: border-box;
+  width: 100%;
+  height: 100px;
+  border: 1px solid black;
+  border-radius: 4px;
+  background-color: #efefef;
+  font-size: 20px;
+  padding: 0px;
+  margin-top: 20px;
+  dominant-baseline: bottom;
+  padding: 5px;
+}
+
+#checkboxes {
+  margin-top: 20px;
+}
+
+.checkbox-row {
+  box-sizing: border-box;
+  font-size: 20px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  width: 100%;
+  display: block;
+  height: 40px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: white;
+}
+
+.checkbox-label {
+  padding: 5px;
+  width: 50%;
+  float: left;
+}
+.checkbox-entry {
+  width: 10%;
+  float: right;
+  height: 100%;
+  margin: 0;
+  margin-right: 5px;
+}
+
+#submit-button{
+  width: 100%;
+  font-size: 20px;
+  margin-top: 20px;
+  padding: 5px;
+}
+
 
 #day-click-capture{
   display: none;
@@ -41,6 +107,6 @@ body {
   padding: 0;
   margin: 0;
   background-color: #FFFFFF00;
-  width: calc(100vw - 400px);
+  width: calc(100vw - 300px);
   height: 100vh;
 }
