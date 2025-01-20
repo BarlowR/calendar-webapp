@@ -141,6 +141,7 @@ class Calendar {
                 Math.floor(this.viewport_y), 
                 final_dim_x, 
                 final_dim_y);
+            return
         }
         var intermediary_scale = intermediary_scale_step
         var intermediary_dim_x = this.staging_canvas.width * intermediary_scale
