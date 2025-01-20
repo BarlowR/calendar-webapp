@@ -445,7 +445,7 @@ class Calendar {
       this.staging_context.font = String(pu(15)) + 'px ' + default_font
       this.staging_context.fillText(
         weekday_num_to_str[day_of_week],
-        x + (day_of_week * day_size + pu(10)),
+        x + (day_of_week * day_size + pu(5)),
         y + day_of_week_header - pu(11)
       )
     }
