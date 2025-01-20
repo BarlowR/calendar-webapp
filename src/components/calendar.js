@@ -2,12 +2,13 @@ import { CalendarData, month_name_mapping} from "./calendar_data.js"
 
 const canvas_dim = 2000
 const screen_offset_clamp_buffer = 100;
-const day_size = 300; 
-const default_line_width = 6;
+const day_size = 350; 
+const default_line_width = 4;
 const month_padding = 60;
 function pu (unit) {
     return (unit * day_size/100)
 };
+const default_font = "Tahoma"
 
 function mouse_to_scaled_translated_canvas( mouse_x, 
                                             mouse_y, 
@@ -297,7 +298,7 @@ class Calendar {
         ctx.fillStyle = color;
         ctx.textBaseline = 'top';
         ctx.textAlign = 'left';
-        ctx.font = String(pu(16)) + "px sans-serif";
+        ctx.font = String(pu(16)) + "px " + default_font;
         ctx.beginPath()
         ctx.fillText(String(day_num), x + pu(5), y + pu(5))
         
@@ -331,7 +332,7 @@ class Calendar {
                 line = line.substring(1)
             } 
             if (line.charAt(0) == " ") { line = line.substring(1);}
-            ctx.font = String(line_height) + "px sans-serif";
+            ctx.font = String(line_height) + "px " + default_font;
                 
             ctx.fillText(line, 
                 x + pu(5),
@@ -413,7 +414,7 @@ class Calendar {
         this.staging_context.fillStyle = month_text_color;
         this.staging_context.textBaseline = 'middle';
         this.staging_context.textAlign = 'left';
-        this.staging_context.font = String(pu(40)) + "px sans-serif";
+        this.staging_context.font = String(pu(40)) + "px " + default_font;
         this.staging_context.fillText(month_name_mapping[month_num], x + (current_day_of_week * day_size) + pu(50), y + (current_row * day_size) + pu(50), day_size * 7, day_size * 6)
     }
     // draw a calendar month
