@@ -63,12 +63,13 @@ class CalendarData {
     initialize_from_jsons = (json_string) => {
         const json_obj = JSON.parse(json_string);
         // console.log(json_obj.year_data)
-        if (json_obj.checkboxes && json_obj.year_data){
-            this.year_data = json_obj.year_data
-            this.checkboxes = json_obj.checkboxes
-        } else {
+        if (!(json_obj.checkboxes && json_obj.year_data)){
             console.log("Bad data")
+            return false;
         }
+        this.year_data = json_obj.year_data
+        this.checkboxes = json_obj.checkboxes
+        return true
     }
     initialize_new = (year, checkboxes = {}) => {
         this.add_new_year(year)
@@ -93,8 +94,7 @@ class CalendarData {
         const cal_data_string = localStorage.getItem("calendar_data")
 
         if (!(cal_data_string === null)){
-            this.initialize_from_jsons(cal_data_string)
-            return true
+            return this.initialize_from_jsons(cal_data_string)
         }
         
         console.log("Could not load from localStorage")

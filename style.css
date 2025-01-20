@@ -41,6 +41,6 @@ body {
   padding: 0;
   margin: 0;
   background-color: #FFFFFF00;
-  width: calc(100% - 400px);
-  height: 100%;
+  width: calc(100vw - 400px);
+  height: 100vh;
 }
