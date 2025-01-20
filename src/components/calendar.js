@@ -2,12 +2,24 @@ import { CalendarData, month_name_mapping} from "./calendar_data.js"
 
 const canvas_dim = 2000
 const screen_offset_clamp_buffer = 100;
-const day_size = 300; 
-const default_line_width = 6;
+const day_size = 350; 
+const default_line_width = 4;
 const month_padding = 60;
 function pu (unit) {
     return (unit * day_size/100)
 };
+const default_font = "Tahoma"
+const day_of_week_header = pu(25);
+
+const weekday_num_to_str = [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+]
 
 function mouse_to_scaled_translated_canvas( mouse_x, 
                                             mouse_y, 
@@ -48,10 +60,9 @@ function starting_weekday(month, year) {
 }
 
 class Calendar {
-    constructor(cal_div, day_entry, calendar_data, background_color) {
+    constructor(cal_div, day_entry, calendar_data) {
         this.day_entry = day_entry
         this.calendar_data = calendar_data
-        this.background_color = background_color
         // Display canvas (whole screen) setup
         this.display_canvas = cal_div;
         this.display_canvas_context = this.display_canvas.getContext("2d");
@@ -65,7 +76,7 @@ class Calendar {
         // 7 days width per month, 4 months wide plus month padding
         this.staging_canvas.width = (day_size * 7) * 4 + (month_padding * 3) + 50 
         // 6 days height per month, 3 months high plus month padding
-        this.staging_canvas.height = (day_size * 6) * 3 + (month_padding * 2) + 50 
+        this.staging_canvas.height = (day_size * 6 + day_of_week_header) * 3 + (month_padding * 2) + 50 
 
         // The scaling canvas is used to hold in intermediate scaled version of the canvas when scaling the image down to improve 
         // visual appearance to the user
@@ -127,7 +138,7 @@ class Calendar {
 
     render_to_display_context = () => {
         // Clear the existing display
-        this.display_canvas_context.fillStyle = this.background_color
+        this.display_canvas_context.fillStyle = this.calendar_data.visuals["background_color"]
         this.display_canvas_context.fillRect(0,0,this.display_canvas.width, this.display_canvas.height);
         const final_dim_x = this.staging_canvas.width * this.viewport_scale
         const final_dim_y = this.staging_canvas.height * this.viewport_scale
@@ -140,12 +151,13 @@ class Calendar {
                 Math.floor(this.viewport_y), 
                 final_dim_x, 
                 final_dim_y);
+            return
         }
         var intermediary_scale = intermediary_scale_step
         var intermediary_dim_x = this.staging_canvas.width * intermediary_scale
         var intermediary_dim_y = this.staging_canvas.height * intermediary_scale
         
-        this.scaling_context.fillStyle = this.background_color
+        this.scaling_context.fillStyle = this.calendar_data.visuals["background_color"]
         this.scaling_context.fillRect(0,0,this.scaling_canvas.width, this.scaling_canvas.height);
         this.scaling_context.drawImage(this.staging_canvas, 
             0, 0, this.staging_canvas.width, this.staging_canvas.height, 
@@ -297,7 +309,7 @@ class Calendar {
         ctx.fillStyle = color;
         ctx.textBaseline = 'top';
         ctx.textAlign = 'left';
-        ctx.font = String(pu(16)) + "px sans-serif";
+        ctx.font = String(pu(16)) + "px " + default_font;
         ctx.beginPath()
         ctx.fillText(String(day_num), x + pu(5), y + pu(5))
         
@@ -331,7 +343,7 @@ class Calendar {
                 line = line.substring(1)
             } 
             if (line.charAt(0) == " ") { line = line.substring(1);}
-            ctx.font = String(line_height) + "px sans-serif";
+            ctx.font = String(line_height) + "px " + default_font;
                 
             ctx.fillText(line, 
                 x + pu(5),
@@ -367,6 +379,20 @@ class Calendar {
             month_text_color = line_color
         }
 
+
+        // Add header with days of week
+        for (var day_of_week = 0; day_of_week < 7; day_of_week ++){
+            this.staging_context.strokeStyle = line_color;
+            this.staging_context.beginPath()
+            this.staging_context.lineWidth = default_line_width;
+            this.staging_context.strokeRect(x + (day_of_week * day_size), y, day_size, day_of_week_header)
+            this.staging_context.stroke()
+            this.staging_context.fillStyle = this.calendar_data.visuals["line_color"]
+            this.staging_context.textBaseline = 'middle';
+            this.staging_context.textAlign = 'left';
+            this.staging_context.font = String(pu(15)) + "px " + default_font;
+            this.staging_context.fillText(weekday_num_to_str[day_of_week], x + (day_of_week * day_size + pu(10)), y + day_of_week_header - pu(11))
+        }
         // Indexed to 0 as monday
         const starting_day_of_week = starting_weekday(month_num, year);
 
@@ -374,7 +400,7 @@ class Calendar {
         var current_row = 0;
         for (var day_num = 1; day_num < info.days_in_month+1; day_num++){
             const x_pos = x + (current_day_of_week * day_size);
-            const y_pos = y + (current_row * day_size);
+            const y_pos = y + day_of_week_header + (current_row * day_size);
             const this_day = day_num
             const day_in_consideration = new Date(year, month_num-1, this_day);
             const yesterday = new Date().setDate(new Date().getDate() - 1);
@@ -402,7 +428,7 @@ class Calendar {
         this.staging_context.strokeStyle = line_color;
         this.staging_context.beginPath()
         this.staging_context.lineWidth = default_line_width*1.2;
-        this.staging_context.strokeRect(x, y, day_size * 7, day_size * 6)
+        this.staging_context.strokeRect(x, y, day_size * 7, day_size * 6 + day_of_week_header)
         this.staging_context.stroke()
 
         if (current_row != 5) {
@@ -413,16 +439,15 @@ class Calendar {
         this.staging_context.fillStyle = month_text_color;
         this.staging_context.textBaseline = 'middle';
         this.staging_context.textAlign = 'left';
-        this.staging_context.font = String(pu(40)) + "px sans-serif";
-        this.staging_context.fillText(month_name_mapping[month_num], x + (current_day_of_week * day_size) + pu(50), y + (current_row * day_size) + pu(50), day_size * 7, day_size * 6)
+        this.staging_context.font = String(pu(40)) + "px " + default_font;
+        this.staging_context.fillText(month_name_mapping[month_num], x + (current_day_of_week * day_size) + pu(50), y + day_of_week_header + (current_row * day_size) + pu(50), day_size * 7, day_size * 6)
     }
     // draw a calendar month
     // info should be a CalendarYearData object. Should probably improve naming of "info"
     draw_year = (x, y, info, line_color, month_text_color = "", passed_day_color="") => {
         const year = info.year;
         const month_width = 7 * day_size + month_padding
-        const month_height = 6 * day_size + month_padding
-        
+        const month_height = 6 * day_size + month_padding + day_of_week_header        
         var month_index = 1;
         for (var current_row = 0; current_row < 3; current_row++){
             for (var current_col = 0; current_col < 4; current_col++){
@@ -445,10 +470,12 @@ class Calendar {
         this.scheduled_redraw = true;
         console.log("redrawing");
         requestAnimationFrame(() => {
-            this.staging_context.fillStyle = this.background_color
+            this.staging_context.fillStyle = this.calendar_data.visuals["background_color"];
             this.staging_context.fillRect(0,0,this.staging_canvas.width, this.staging_canvas.height);
             this.draw_year(5, 5, this.calendar_data.year_data["2025"],
-                "black", "green", "#00ff0030");
+                this.calendar_data.visuals["line_color"],
+                this.calendar_data.visuals["month_text_color"], 
+                this.calendar_data.visuals["finished_day_color"]);
             this.scheduled_redraw = false;
             this.render_page()
         });

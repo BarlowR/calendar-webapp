@@ -124,7 +124,7 @@ class GoogleDriveCalendarFileHandler{
             }
 
             // Pull the file list, and iterate over them until we find the one matching the name of the calendar data file
-            const file_response = JSON.parse(response)
+            const file_response = JSON.parse(xhr.response)
             for (const file of file_response["files"]){
                 if ((file["name"] === this.json_file_name) && (!found_calendar_file)){
                     this.file_id = file["id"]

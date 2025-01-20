@@ -69,11 +69,17 @@ class CalendarData {
         }
         this.year_data = json_obj.year_data
         this.checkboxes = json_obj.checkboxes
+        this.visuals = json_obj.visuals
+        //TODO: Data validity check
         return true
     }
     initialize_new = (year, checkboxes = {}) => {
         this.add_new_year(year)
         this.checkboxes = checkboxes
+        this.visuals =  {"month_text_color" : "#166709", 
+                         "line_color" : "#000000", 
+                         "finished_day_color" : "#67490929", 
+                         "background_color" : "#e8dec9"}
     }
     add_new_year = (year) => {
         this.year_data[year] = new CalendarYearData(year)
