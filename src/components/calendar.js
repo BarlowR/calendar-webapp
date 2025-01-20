@@ -450,7 +450,9 @@ class Calendar {
             this.staging_context.fillStyle = this.background_color
             this.staging_context.fillRect(0,0,this.staging_canvas.width, this.staging_canvas.height);
             this.draw_year(5, 5, this.calendar_data.year_data["2025"],
-                "black", "green", "#00ff0030");
+                this.calendar_data.visuals["line_color"],
+                this.calendar_data.visuals["month_text_color"], 
+                this.calendar_data.visuals["finished_day_color"]);
             this.scheduled_redraw = false;
             this.render_page()
         });
