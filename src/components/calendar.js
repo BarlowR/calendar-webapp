@@ -368,6 +368,7 @@ class Calendar {
   draw_day_text = (x, y, text) => {
     const ctx = this.staging_context
     const text_lines = text.split(/\r?\n|\r|\n/g)
+    ctx.fillStyle = this.calendar_data["line_color"]
     var current_line = y + pu(95)
     ctx.textBaseline = 'bottom'
     for (var line of text_lines.reverse()) {
@@ -387,8 +388,44 @@ class Calendar {
       }
       ctx.font = String(line_height) + 'px ' + default_font
 
-      ctx.fillText(line, x + pu(5), current_line)
-      current_line -= line_height
+      // Measure the line width and break up into multiple lines if needed
+      if (ctx.measureText(line).width > (day_size - pu(10))){
+        
+        var split_lines = []
+        var shortened_line = ""
+        // Iterate over all words in the line
+        for (const word of line.split(" ")){
+          // If the word itself if too long, don't do anything to shorten it.
+          if (ctx.measureText(word + " ").width > day_size){
+            split_lines.push(word);
+            continue;
+          }
+          // Construct a string with the current string of words plus the next one
+          const line_with_new_word = shortened_line + word + " "; 
+          // Check if it is too long
+          if (ctx.measureText(line_with_new_word).width > (day_size - pu(10))){
+            // Add the current set of words to the list of broken up lines
+            split_lines.push(shortened_line);
+            // Set the new line to be the current word.
+            shortened_line = word + " ";
+          } else {
+            // Set the current string of words to the one including the next word
+            shortened_line = line_with_new_word;
+          }
+        }
+        // Add the last set of words to the list of broken up lines once we get to the 
+        // end of the words
+        split_lines.push(shortened_line);
+        // itarate over all the lines and paint them to the canvas
+        for (var split_line of split_lines.reverse()) {
+          ctx.fillText(split_line, x + pu(5), current_line)
+          current_line -= line_height
+        }
+      } else {
+        // Much easier if the line isn't too long
+        ctx.fillText(line, x + pu(5), current_line)
+        current_line -= line_height
+      }
     }
   }
 
@@ -400,7 +437,6 @@ class Calendar {
     const checkbox_width = pu(10)
     for (const checkbox_type in this.calendar_data.checkboxes) {
       if (day_checkboxes.includes(checkbox_type)) {
-        // console.log(checkbox_type, day_checkboxes, this.calendar_data.checkboxes[checkbox_type])
         ctx.fillStyle = this.calendar_data.checkboxes[checkbox_type]
         ctx.fillRect(checkbox_x, checkbox_y, checkbox_width, checkbox_width)
       }
@@ -571,7 +607,7 @@ class Calendar {
       return
     }
     this.scheduled_redraw = true
-    console.log('redrawing')
+    // console.log('redrawing')
     requestAnimationFrame(() => {
       this.staging_context.fillStyle =
         this.calendar_data.visuals['background_color']
