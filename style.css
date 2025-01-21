@@ -59,6 +59,7 @@ body {
   margin-top: 20px;
   dominant-baseline: bottom;
   padding: 5px;
+  resize: none;
 }
 
 #checkboxes {

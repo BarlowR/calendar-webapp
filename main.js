@@ -85,9 +85,11 @@ function register_event_handlers(calendar, calendar_canvas) {
     calendar.resize(e);
   }
 
-  // Scale
-  window.onwheel = (e) => {
-    calendar.update_scale(e);
-  }
+  window.addEventListener('wheel', (e) => {
+    // Prevent default scrolling behavior
+    e.preventDefault();  
+    // Update scale
+    calendar.update_scale(e); 
+  }, { passive: false }); // Required for preventing default behavior
 }
 window.addEventListener('load', main)
