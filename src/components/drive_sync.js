@@ -49,7 +49,7 @@ class GoogleDriveAuth {
   request_auth = () => {
     // Check if authorized.
     if (this.check_if_authorized()) {
-      console.log('Already Authorized')
+      // console.log('Already Authorized')
       if (this.on_auth_callback) {
         // Call the authorization success callback
         this.on_auth_callback(this.access_token)
@@ -151,7 +151,7 @@ class GoogleDriveCalendarFileHandler {
 
   found_file = () => {
     // Download the file at the current set file_id
-    console.log('File Exists')
+    console.log('Found data file on Google Drive')
     this.download_calendar_file(this.file_id)
   }
 
@@ -193,7 +193,7 @@ class GoogleDriveCalendarFileHandler {
     xhr.setRequestHeader('Authorization', 'Bearer ' + this.access_token)
     xhr.onload = () => {
       this.file_id = JSON.parse(xhr.response).id // Retrieve uploaded file ID.
-      console.log('Created new File ' + this.file_id)
+      // console.log('Created new File ' + this.file_id)
     }
     xhr.send(form)
   }
@@ -210,7 +210,7 @@ class GoogleDriveCalendarFileHandler {
     )
     xhr.onload = () => {
       // Nothing needed here, we don't get a response if the method succeeds.
-      console.log('deleted: ' + file_id)
+      // console.log('deleted: ' + file_id)
     }
     xhr.send()
   }

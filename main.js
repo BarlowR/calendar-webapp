@@ -31,7 +31,7 @@ function main() {
   
   // Request authorization from the user
   if (auth.request_auth()){
-    console.log("Auth success");
+    console.log("GDrive Authorization Success");
   } else { 
     // TODO: Pop-up that says, "Not syncing with google"
   }
