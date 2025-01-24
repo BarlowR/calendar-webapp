@@ -11,7 +11,16 @@ function pu (unit) {
 const default_font = 'Tahoma'
 const day_of_week_header = pu(25)
 
+const info_panel_height = day_size * 2
+const info_panel_aspect_ratio = 2 * 1.618
+
+const display_cols = 4
+const display_rows = 3
+
 const weekday_num_to_str = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+const month_width = (7 * day_size)
+const month_height = (6 * day_size) 
 
 function mouse_to_scaled_translated_canvas (
   mouse_x,
@@ -68,10 +77,11 @@ class Calendar {
     this.staging_context = this.staging_canvas.getContext('2d')
 
     // 7 days width per month, 4 months wide plus month padding
-    this.staging_canvas.width = day_size * 7 * 4 + month_padding * 3 + 50
+    this.staging_canvas.width = (day_size * 7 * display_cols) + (month_padding * (display_cols-1)) + 50
     // 6 days height per month, 3 months high plus month padding
     this.staging_canvas.height =
-      (day_size * 6 + day_of_week_header) * 3 + month_padding * 2 + 50
+      (((day_size * 6 + day_of_week_header) * display_rows) + (month_padding * display_rows) +
+       info_panel_height +  50)
 
     // The scaling canvas is used to hold in intermediate scaled version of the canvas when scaling the image down to improve
     // visual appearance to the user
@@ -79,8 +89,8 @@ class Calendar {
     this.scaling_context = this.scaling_canvas.getContext('2d')
 
     // Same size as the staging canvas
-    this.scaling_canvas.width = day_size * 7 * 4 + month_padding * 3 + 50
-    this.scaling_canvas.height = day_size * 6 * 3 + month_padding * 2 + 50
+    this.scaling_canvas.width = this.staging_canvas.width
+    this.scaling_canvas.height = this.staging_canvas.height
 
     // viewport variables
     this.viewport_x, this.viewport_y, this.viewport_scale
@@ -580,16 +590,14 @@ class Calendar {
     passed_day_color = ''
   ) => {
     const year = info.year
-    const month_width = 7 * day_size + month_padding
-    const month_height = 6 * day_size + month_padding + day_of_week_header
     var month_index = 1
-    for (var current_row = 0; current_row < 3; current_row++) {
-      for (var current_col = 0; current_col < 4; current_col++) {
+    for (var current_row = 0; current_row < display_rows; current_row++) {
+      for (var current_col = 0; current_col < display_cols; current_col++) {
         const month_info = info.months[String(month_index)]
 
         this.draw_month(
-          x + current_col * month_width,
-          y + current_row * month_height,
+          x + (current_col * (month_width  + month_padding)),
+          y + (current_row * (month_height + month_padding + day_of_week_header)),
           year,
           month_info,
           line_color,
@@ -598,6 +606,67 @@ class Calendar {
         )
         month_index++
       }
+    }
+    this.draw_year_panel( x, y + (display_rows * (month_height + day_of_week_header + month_padding)), info, line_color, line_color, year)
+  }
+
+  draw_year_panel = (
+    x,
+    y, 
+    checkboxes,
+    text_color,
+    line_color,
+    year_number
+  ) => {
+
+    this.staging_context.strokeStyle = line_color
+    this.staging_context.beginPath()
+    this.staging_context.lineWidth = default_line_width;
+    // this.staging_context.strokeRect(
+    //   x,
+    //   y,
+    //   month_width,
+    //   info_panel_height
+    // )
+    this.staging_context.stroke()
+
+    this.staging_context.fillStyle = text_color
+    this.staging_context.textBaseline = 'top'
+    this.staging_context.textAlign = 'left'
+    this.staging_context.font = "50 " + String(pu(160)) + 'px ' + default_font
+    this.staging_context.fillText(
+      year_number,
+      x + pu(30),
+      y,
+    )
+    this.draw_year_checkbox_panel(x + pu(350), y, line_color);
+  }
+
+  draw_year_checkbox_panel = (x, y, line_color) => {
+    const ctx = this.staging_context
+    const checkbox_buffer = pu(10)
+    var checkbox_y = y + checkbox_buffer/2
+    const checkbox_x = x + pu(50)
+    const checkbox_width = (pu(130) / (Object.keys(this.calendar_data.checkboxes).length)) - checkbox_buffer
+    const checkbox_y_seperation = checkbox_width + checkbox_buffer
+
+    for (const checkbox_type in this.calendar_data.checkboxes) {
+      ctx.fillStyle = this.calendar_data.checkboxes[checkbox_type]  
+      ctx.fillRect(checkbox_x, checkbox_y, checkbox_width, checkbox_width)
+      ctx.beginPath()
+      ctx.strokeStyle = line_color
+      ctx.lineWidth = default_line_width / 2
+      ctx.strokeRect(checkbox_x, checkbox_y, checkbox_width, checkbox_width)
+      this.staging_context.fillStyle = line_color
+      this.staging_context.textBaseline = 'middle'
+      this.staging_context.textAlign = 'left'
+      this.staging_context.font = String(checkbox_width) + 'px ' + default_font
+      this.staging_context.fillText(
+        checkbox_type,
+        checkbox_x + checkbox_width + pu(10),
+        checkbox_y + checkbox_width/2,
+      )
+      checkbox_y += checkbox_y_seperation
     }
   }
 
