@@ -647,7 +647,8 @@ class Calendar {
     const checkbox_buffer = pu(10)
     var checkbox_y = y + checkbox_buffer/2
     const checkbox_x = x + pu(50)
-    const checkbox_width = (pu(130) / (Object.keys(this.calendar_data.checkboxes).length)) - checkbox_buffer
+    var checkbox_count = (Object.keys(this.calendar_data.checkboxes).length > 2) ? Object.keys(this.calendar_data.checkboxes).length : 2 
+    const checkbox_width = (pu(130) / checkbox_count) - checkbox_buffer
     const checkbox_y_seperation = checkbox_width + checkbox_buffer
 
     for (const checkbox_type in this.calendar_data.checkboxes) {
