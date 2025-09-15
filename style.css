@@ -23,6 +23,37 @@ body {
   border: none;
 }
 
+#menu-open {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 200px;
+  height: 60px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 60px;
+  border-top-left-radius: 8px;
+  background-color: #efefef;
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+  font-family: "Tahoma";
+  font-size: 20px;
+}
+
+#menu {
+  display:none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 350px;
+  height: 100vh;
+}
+
+#menu-display {
+  padding: 20px;
+  font-family: "Tahoma";
+}
+
 #text-entry-sidebar{
   display:none;
   position: absolute;
@@ -41,9 +72,9 @@ body {
 #text-entry-date{
   font-size: 30px;
   padding: 5px;
-  background-color: white;
+  background-color: #efefef;
   border-radius: 4px;
-  border: 1px solid black;
+  border: 1px solid #000000;
   text-align: center;
 }
 
@@ -51,7 +82,7 @@ body {
   box-sizing: border-box;
   width: 100%;
   height: 100px;
-  border: 1px solid black;
+  border: 1px solid #000000;
   border-radius: 4px;
   background-color: #efefef;
   font-size: 20px;
@@ -76,7 +107,7 @@ body {
   height: 40px;
   margin-top: 5px;
   margin-bottom: 5px;
-  background-color: white;
+  background-color: #efefef;
 }
 
 .checkbox-label {
@@ -110,4 +141,177 @@ body {
   background-color: #FFFFFF00;
   width: calc(100vw - 300px);
   height: 100vh;
+}
+
+#menu-click-capture{
+  display: none;
+  position: absolute;
+  right: 350px;
+  top: 0;
+  padding: 0;
+  margin: 0;
+  background-color: #FFFFFF00;
+  width: calc(100vw - 350px);
+  height: 100vh;
+}
+
+/* Menu styling */
+#menu h3 {
+  font-size: 30px;
+  padding: 5px;
+  background-color: #efefef;
+  border-radius: 4px;
+  border: 1px solid #000000;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-weight: normal;
+}
+
+#menu h4 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  margin-top: 20px;
+  color: #000;
+  font-weight: normal;
+}
+
+.menu-section {
+  margin-bottom: 20px;
+}
+
+/* Checkbox editor styles */
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  padding: 5px;
+  background-color: #efefef;
+  border-radius: 4px;
+  border: 1px solid #000000;
+}
+
+.checkbox-name {
+  flex-grow: 1;
+  font-size: 20px;
+  font-family: "Tahoma";
+  margin-right: 10px;
+  font-weight: normal;
+}
+
+.checkbox-item input[type="color"] {
+  margin-right: 10px;
+  width: 40px;
+  height: 30px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.remove-btn {
+  background-color: #efefef;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: "Tahoma";
+}
+
+.add-checkbox {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#new-checkbox-name {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+  padding: 5px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  background-color: #efefef;
+  font-size: 20px;
+  font-family: "Tahoma";
+}
+
+#new-checkbox-color {
+  width: 45px;
+  height: 34px;
+  min-width: 45px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+#add-checkbox-btn {
+  padding: 5px 12px;
+  background-color: #efefef;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  font-family: "Tahoma";
+}
+
+/* Color editor styles */
+.color-setting {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 5px;
+  background-color: #efefef;
+  border: 1px solid #000000;
+  border-radius: 4px;
+}
+
+.color-setting label {
+  font-size: 20px;
+  font-family: "Tahoma";
+  color: #000;
+  font-weight: normal;
+}
+
+.color-setting input[type="color"] {
+  width: 50px;
+  height: 30px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Button styles */
+#cycle-colors-btn {
+  width: 100%;
+  padding: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  font-family: "Tahoma";
+  background-color: #efefef;
+  color: #000000;
+}
+
+#close-menu-btn {
+  width: 100%;
+  padding: 5px;
+  margin-top: 20px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  font-family: "Tahoma";
+  background-color: #efefef;
+  color: #000000;
 }

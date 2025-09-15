@@ -1,6 +1,7 @@
 import { Calendar } from "./src/components/calendar.js"
 import { CalendarData } from "./src/components/calendar_data.js"
 import { DayEntry } from "./src/components/day_entry.js"
+import { Menu } from "./src/components/menu.js"
 import {GoogleDriveAuth, GoogleDriveCalendarFileHandler} from "./src/components/drive_sync.js"
 
 
@@ -20,12 +21,24 @@ function main() {
   // Pull the calendar canvas and create the calendar object. This will draw the placeholder calendar data.
   const calendar_canvas_div = document.getElementById("calendar-canvas");
   const text_entry_div = document.getElementById("text-entry-sidebar");
+  const menu_click_div = document.getElementById("menu-open");
+  const menu_div = document.getElementById("menu");
   var day_entry = new DayEntry(text_entry_div, calendar_data, file_handler)
   var calendar = new Calendar(calendar_canvas_div, day_entry, calendar_data);
   day_entry.set_redraw(calendar.draw)
-  
+
+  var menu = new Menu(menu_click_div, menu_div, calendar_data, file_handler)
+  menu.set_color(calendar_data.visuals["background_color"])
+  menu.set_redraw(calendar.draw)
+
+  // Make menu globally accessible for HTML onclick handlers
+  window.menu = menu
+
   // Set the data handler redraw callback
-  file_handler.set_redraw(calendar.draw)
+  file_handler.set_redraw(() => {
+    calendar.draw()
+    menu.set_color(calendar_data.visuals["background_color"])
+  })
   // Create a authentication handler and register the file pull callback
   var auth = new GoogleDriveAuth(file_handler.auth_callback)
   

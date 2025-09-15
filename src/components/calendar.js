@@ -378,7 +378,7 @@ class Calendar {
   draw_day_text = (x, y, text) => {
     const ctx = this.staging_context
     const text_lines = text.split(/\r?\n|\r|\n/g)
-    ctx.fillStyle = this.calendar_data["line_color"]
+    ctx.fillStyle = this.calendar_data.visuals['line_color']
     var current_line = y + pu(95)
     ctx.textBaseline = 'bottom'
     for (var line of text_lines.reverse()) {
