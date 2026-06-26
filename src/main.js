@@ -1,8 +1,8 @@
-import { Calendar } from "./src/components/calendar.js"
-import { CalendarData } from "./src/components/calendar_data.js"
-import { DayEntry } from "./src/components/day_entry.js"
-import { Menu } from "./src/components/menu.js"
-import {GoogleDriveAuth, GoogleDriveCalendarFileHandler} from "./src/components/drive_sync.js"
+import { Calendar } from "./components/calendar.js"
+import { CalendarData } from "./components/calendar_data.js"
+import { DayEntry } from "./components/day_entry.js"
+import { Menu } from "./components/menu.js"
+import {GoogleDriveAuth, GoogleDriveCalendarFileHandler} from "./components/drive_sync.js"
 
 
 function main() {

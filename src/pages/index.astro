@@ -1,0 +1,95 @@
+---
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RNP8ZCWCXX" is:inline></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-RNP8ZCWCXX');
+    </script>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <title>In Hindsight</title>
+    <script src="https://accounts.google.com/gsi/client" async is:inline></script>
+    <script>
+      import "../main.js";
+    </script>
+  </head>
+  <body>
+    <div id="container">
+      <canvas id="calendar-canvas"></canvas>
+      <div id="menu-open"> - Menu - </div>
+      <div id="menu">
+        <div id="menu-display">
+          <h3>Settings</h3>
+
+          <div class="menu-section">
+            <h4>Daily Checkboxes</h4>
+            <div id="checkbox-editor">
+              <div id="existing-checkboxes"></div>
+              <div class="add-checkbox">
+                <input type="text" id="new-checkbox-name" placeholder="New checkbox" />
+                <input type="color" id="new-checkbox-color" value="#ffffff" />
+                <button id="add-checkbox-btn">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-section">
+            <h4 id="colors-title">Calendar Colors</h4>
+            <button id="cycle-colors-btn">Next Theme</button>
+            <div id="color-editor">
+              <div class="color-setting">
+                <label for="background-color">Background:</label>
+                <input type="color" id="background-color" value="#e8dec9" />
+              </div>
+              <div class="color-setting">
+                <label for="line-color">Grid Lines:</label>
+                <input type="color" id="line-color" value="#000000" />
+              </div>
+              <div class="color-setting">
+                <label for="month-text-color">Month Text:</label>
+                <input type="color" id="month-text-color" value="#166709" />
+              </div>
+              <div class="color-setting">
+                <label for="finished-day-color">Completed Days:</label>
+                <input type="color" id="finished-day-color" value="#674909" />
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-section">
+            <h4>Backup</h4>
+            <button id="export-btn">Export Calendar</button>
+            <button id="import-btn">Import Calendar</button>
+            <input type="file" id="import-file" accept="application/json,.json" style="display: none" />
+          </div>
+
+          <div class="menu-section">
+            <button id="close-menu-btn">Close Menu</button>
+          </div>
+        </div>
+        <div id="menu-click-capture"></div>
+      </div>
+      <div id="text-entry-sidebar">
+        <div id="text-entry-display">
+          <div id="text-entry-date">2025-05-12</div>
+
+          <form id="day-form">
+            <textarea id="day-text-entry"></textarea>
+            <div id="checkboxes">
+            </div>
+            <button id="submit-button" type="submit">Enter</button>
+          </form>
+          <div id="day-click-capture"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

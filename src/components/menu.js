@@ -24,6 +24,10 @@ class Menu {
         this.cycle_colors_btn = this.menu.querySelector('#cycle-colors-btn')
         this.close_menu_btn = this.menu.querySelector('#close-menu-btn')
 
+        this.export_btn = this.menu.querySelector('#export-btn')
+        this.import_btn = this.menu.querySelector('#import-btn')
+        this.import_file_input = this.menu.querySelector('#import-file')
+
         // Define predefined color sets
         this.color_themes = [
             {
@@ -99,6 +103,11 @@ class Menu {
         // Other actions
         this.cycle_colors_btn.onclick = this.cycle_color_theme
         this.close_menu_btn.onclick = this.close_menu
+
+        // Backup actions
+        this.export_btn.onclick = this.export_calendar
+        this.import_btn.onclick = this.import_calendar
+        this.import_file_input.onchange = this.handle_import_file
 
         // Click capture area
         this.menu_click_capture.addEventListener('click', (e) => {
@@ -186,6 +195,54 @@ class Menu {
 
         // Update title to show current theme
         this.update_colors_title(theme.name)
+    }
+
+    export_calendar = () => {
+        // Serialize the full calendar (year data, checkboxes, visuals) and
+        // hand it to the browser as a downloadable JSON file.
+        const json_string = this.calendar_data.save_to_jsons()
+        const blob = new Blob([json_string], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        const today = new Date().toISOString().slice(0, 10)
+        link.download = `calendar-${today}.json`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+    }
+
+    import_calendar = () => {
+        // Open the OS file picker; the actual load happens in handle_import_file
+        this.import_file_input.click()
+    }
+
+    handle_import_file = (e) => {
+        const file = e.target.files && e.target.files[0]
+        if (!file) {
+            return
+        }
+        const reader = new FileReader()
+        reader.onload = () => {
+            if (this.calendar_data.initialize_from_jsons(reader.result)) {
+                // Persist locally + to Drive, then refresh the menu and canvas
+                this.save_and_sync()
+                this.refresh_checkbox_list()
+                this.load_current_colors()
+                this.set_color(this.calendar_data.visuals['background_color'])
+                this.redraw()
+            } else {
+                alert('Could not import calendar: the file is not valid calendar data.')
+            }
+            // Reset so selecting the same file again still fires onchange
+            this.import_file_input.value = ''
+        }
+        reader.onerror = () => {
+            alert('Could not read the selected file.')
+            this.import_file_input.value = ''
+        }
+        reader.readAsText(file)
     }
 
     switch_to_custom_theme = () => {
