@@ -12,7 +12,7 @@ function main() {
   if (!calendar_data.load_from_browser()){
     console.log("Initializing new year")
     // Start a new year if there is no data available
-    calendar_data.initialize_new(2025, {"Run": "#51a145", "Lift" : "#f5b32e"})
+    calendar_data.initialize_new(new Date().getFullYear(), {"Run": "#51a145", "Lift" : "#f5b32e"})
   }
 
   // Create the google drive calendar data handler

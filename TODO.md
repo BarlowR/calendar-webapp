@@ -8,11 +8,14 @@ they land.
 
 ## 🔴 Bugs (do these first)
 
-- [ ] **Hardcoded year `'2025'`** — `src/components/calendar.js:693` always draws
+- [x] **Hardcoded year `'2025'`** — `src/components/calendar.js:693` always draws
   `year_data['2025']`, and `src/main.js:15` initializes a new calendar with
   `initialize_new(2025, ...)`. Today is 2026, so the app is permanently stuck on
   2025 and "completed day" shading no longer makes sense. Drive the year from the
-  current date (or from a selectable/persisted "current year").
+  current date (or from a selectable/persisted "current year"). _Done: `Calendar`
+  now tracks `this.year` (defaults to the current year) and renders
+  `year_data[this.year]` via a new `ensure_year` guard; `main.js` initializes with
+  the current year. Multi-year navigation remains a follow-up (see Features)._
 
 - [ ] **Google login popup is blocked** — `request_auth()` calls
   `client.requestAccessToken()` during page `load` (`src/main.js:46`,
@@ -29,11 +32,13 @@ they land.
   are declared. Fix the reference (`this.` → local) and the variable ordering, or
   delete the branch.
 
-- [ ] **`initialize_from_jsons` trusts `visuals`** —
+- [x] **`initialize_from_jsons` trusts `visuals`** —
   `src/components/calendar_data.js:81` does `this.visuals = json_obj.visuals`
   without checking it exists. Older exports / Drive files without a `visuals`
   block will set `visuals = undefined` and crash the renderer (which reads
-  `visuals['background_color']`). Validate and fall back to defaults.
+  `visuals['background_color']`). Validate and fall back to defaults. _Done:
+  extracted a shared `DEFAULT_VISUALS` constant and merge it under any loaded
+  `visuals`, so missing keys fall back to defaults._
 
 - [ ] **Public-asset base warning** — dev logs
   `Request URLs for public/ assets must also include your base` for

@@ -107,6 +107,9 @@ class Calendar {
     // scaling cache
     this.last_scaling_factor = -1
 
+    // The year currently being displayed. Defaults to the current calendar year.
+    this.year = new Date().getFullYear()
+
     this.draw()
   }
 
@@ -687,10 +690,12 @@ class Calendar {
         this.staging_canvas.width,
         this.staging_canvas.height
       )
+      // Make sure the displayed year exists before drawing it.
+      this.calendar_data.ensure_year(this.year)
       this.draw_year(
         5,
         5,
-        this.calendar_data.year_data['2025'],
+        this.calendar_data.year_data[this.year],
         this.calendar_data.visuals['line_color'],
         this.calendar_data.visuals['month_text_color'],
         this.calendar_data.visuals['finished_day_color']

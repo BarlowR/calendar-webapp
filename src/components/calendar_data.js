@@ -24,6 +24,15 @@ function calc_days_in_month (month, year) {
   return 30
 }
 
+// Default calendar colors. Used both when starting a fresh calendar and as a
+// fallback when loading data that predates the `visuals` block.
+const DEFAULT_VISUALS = {
+  month_text_color: '#166709',
+  line_color: '#000000',
+  finished_day_color: '#67490929',
+  background_color: '#e8dec9'
+}
+
 const month_name_mapping = {
   1: 'January',
   2: 'February',
@@ -78,22 +87,26 @@ class CalendarData {
     }
     this.year_data = json_obj.year_data
     this.checkboxes = json_obj.checkboxes
-    this.visuals = json_obj.visuals
+    // Older exports / Drive files may not carry a visuals block; fall back to
+    // the defaults so the renderer never reads from an undefined object.
+    this.visuals = { ...DEFAULT_VISUALS, ...(json_obj.visuals || {}) }
     //TODO: Data validity check
     return true
   }
   initialize_new = (year, checkboxes = {}) => {
     this.add_new_year(year)
     this.checkboxes = checkboxes
-    this.visuals = {
-      month_text_color: '#166709',
-      line_color: '#000000',
-      finished_day_color: '#67490929',
-      background_color: '#e8dec9'
-    }
+    this.visuals = { ...DEFAULT_VISUALS }
   }
   add_new_year = year => {
     this.year_data[year] = new CalendarYearData(year)
+  }
+  // Make sure the given year exists in the data set, creating an empty year if
+  // it does not. Lets the renderer ask for the current year without crashing.
+  ensure_year = year => {
+    if (!(String(year) in this.year_data)) {
+      this.add_new_year(year)
+    }
   }
   add_new_checkbox = (checkbox_name, color) => {
     this.checkboxes[checkbox_name] = color
