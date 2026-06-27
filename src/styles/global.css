@@ -15,9 +15,13 @@ body {
 }
 
 #calendar-canvas{
+  display: block;
   width: 100%;
   min-width: 800px;
-  height: 100%;
+  /* Use a definite viewport height. `height: 100%` collapses to auto here
+     (no ancestor has a definite height), which would make the canvas fall back
+     to its intrinsic attribute ratio and leave the bottom of the screen blank. */
+  height: 100vh;
   margin: 0;
   padding: 0;
   border: none;

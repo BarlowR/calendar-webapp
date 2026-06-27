@@ -79,8 +79,10 @@ class Calendar {
     // Display canvas (whole screen) setup
     this.display_canvas = cal_div
     this.display_canvas_context = this.display_canvas.getContext('2d')
-    this.display_canvas.width = window.innerWidth
-    this.display_canvas.height = window.innerHeight
+    // Render at the device's physical pixel density so lines and text stay
+    // crisp on HiDPI / retina / mobile screens instead of being stretched.
+    this.dpr = window.devicePixelRatio || 1
+    this.size_display_canvas()
 
     // The staging canvas is used to hold the full, high resolution version of the calendar rendering
     this.staging_canvas = document.createElement('canvas')
@@ -155,6 +157,12 @@ class Calendar {
   }
 
   render_to_display_context = () => {
+    // Use high-quality interpolation so downscaled lines/text don't drop out.
+    this.display_canvas_context.imageSmoothingEnabled = true
+    this.display_canvas_context.imageSmoothingQuality = 'high'
+    this.scaling_context.imageSmoothingEnabled = true
+    this.scaling_context.imageSmoothingQuality = 'high'
+
     // Clear the existing display
     this.display_canvas_context.fillStyle =
       this.calendar_data.visuals['background_color']
@@ -164,22 +172,27 @@ class Calendar {
       this.display_canvas.width,
       this.display_canvas.height
     )
-    const final_dim_x = this.staging_canvas.width * this.viewport_scale
-    const final_dim_y = this.staging_canvas.height * this.viewport_scale
+    // Work in device pixels (CSS px * dpr) so the result fills the HiDPI backing
+    // store at full resolution. viewport_x/y stay in CSS px for pan/click math.
+    const dpr = this.dpr
+    const dest_x = Math.floor(this.viewport_x * dpr)
+    const dest_y = Math.floor(this.viewport_y * dpr)
+    const final_dim_x = this.staging_canvas.width * this.viewport_scale * dpr
+    const final_dim_y = this.staging_canvas.height * this.viewport_scale * dpr
 
     const intermediary_scale_step = 0.6
     // When we are not shrinking the image much, the iterative downscale below
     // isn't needed for quality, so draw the staging canvas straight to the
-    // display at the final size.
-    if (this.viewport_scale > intermediary_scale_step) {
+    // display at the final size. Compare in device pixels.
+    if (this.viewport_scale * dpr > intermediary_scale_step) {
       this.display_canvas_context.drawImage(
         this.staging_canvas,
         0,
         0,
         this.staging_canvas.width,
         this.staging_canvas.height,
-        Math.floor(this.viewport_x),
-        Math.floor(this.viewport_y),
+        dest_x,
+        dest_y,
         final_dim_x,
         final_dim_y
       )
@@ -245,8 +258,8 @@ class Calendar {
       0,
       intermediary_dim_x,
       intermediary_dim_y,
-      Math.floor(this.viewport_x),
-      Math.floor(this.viewport_y),
+      dest_x,
+      dest_y,
       final_dim_x,
       final_dim_y
     )
@@ -304,11 +317,11 @@ class Calendar {
     const min_x =
       screen_offset_clamp_buffer -
       this.staging_canvas.width * this.viewport_scale
-    const max_x = this.display_canvas.width - screen_offset_clamp_buffer
+    const max_x = this.view_width - screen_offset_clamp_buffer
     const min_y =
       screen_offset_clamp_buffer -
       this.staging_canvas.height * this.viewport_scale
-    const max_y = this.display_canvas.height - screen_offset_clamp_buffer
+    const max_y = this.view_height - screen_offset_clamp_buffer
     if (this.viewport_x < min_x) {
       this.viewport_x = min_x
     } else if (this.viewport_x > max_x) {
@@ -321,10 +334,24 @@ class Calendar {
     }
   }
 
+  // Size the display canvas: let CSS control the displayed size and only scale
+  // the backing store up by the device pixel ratio so rendering is crisp. We
+  // measure the actual laid-out box (respecting the stylesheet) rather than
+  // forcing a pixel size, which would override CSS and distort the aspect ratio.
+  // The measured CSS dimensions are kept for viewport math (panning / clamping).
+  size_display_canvas = () => {
+    const rect = this.display_canvas.getBoundingClientRect()
+    this.view_width = rect.width || window.innerWidth
+    this.view_height = rect.height || window.innerHeight
+    this.display_canvas.width = Math.round(this.view_width * this.dpr)
+    this.display_canvas.height = Math.round(this.view_height * this.dpr)
+  }
+
   resize = e => {
     // update the canvas size and clamp the viewport position using the new dimensions.
-    this.display_canvas.width = window.innerWidth
-    this.display_canvas.height = window.innerHeight
+    // Pick up a DPR change too (e.g. dragging the window between monitors).
+    this.dpr = window.devicePixelRatio || 1
+    this.size_display_canvas()
     this.update_offset(0, 0)
     this.render_page()
   }
