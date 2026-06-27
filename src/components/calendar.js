@@ -20,7 +20,17 @@ const display_rows = 3
 const weekday_num_to_str = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const month_width = (7 * day_size)
-const month_height = (6 * day_size) 
+const month_height = (6 * day_size)
+
+// Vertical space one full year occupies on the staging canvas: the month grid
+// plus the info/year panel beneath it.
+const year_block_height =
+  (display_rows * (month_height + day_of_week_header + month_padding)) +
+  info_panel_height
+// Gap between stacked years.
+const year_block_padding = month_padding * 3
+// Top/bottom margin around the whole stack.
+const stack_margin = 50
 
 function mouse_to_scaled_translated_canvas (
   mouse_x,
@@ -158,13 +168,16 @@ class Calendar {
     const final_dim_y = this.staging_canvas.height * this.viewport_scale
 
     const intermediary_scale_step = 0.6
-    if (this.viewport_scale > this.intermediary_scale_step) {
+    // When we are not shrinking the image much, the iterative downscale below
+    // isn't needed for quality, so draw the staging canvas straight to the
+    // display at the final size.
+    if (this.viewport_scale > intermediary_scale_step) {
       this.display_canvas_context.drawImage(
         this.staging_canvas,
         0,
         0,
-        intermediary_dim_x,
-        intermediary_dim_y,
+        this.staging_canvas.width,
+        this.staging_canvas.height,
         Math.floor(this.viewport_x),
         Math.floor(this.viewport_y),
         final_dim_x,
@@ -509,7 +522,8 @@ class Calendar {
       const this_day = day_num
       const day_in_consideration = new Date(year, month_num - 1, this_day)
       const yesterday = new Date().setDate(new Date().getDate() - 1)
-      var button_id = String(month_num) + '-' + String(this_day)
+      // Include the year so stacked years don't share (and overwrite) click ids.
+      var button_id = String(year) + '-' + String(month_num) + '-' + String(this_day)
       if (
         yesterday > day_in_consideration.getTime() &&
         passed_day_color != ''
@@ -674,6 +688,26 @@ class Calendar {
     }
   }
 
+  // Years present in the data, oldest first.
+  sorted_years = () => {
+    return Object.keys(this.calendar_data.year_data)
+      .map(Number)
+      .sort((a, b) => a - b)
+  }
+
+  // Size the staging (and matching scaling) canvas tall enough to hold the
+  // given number of stacked years. Resizing clears the canvas, so only do it
+  // when the required height actually changes.
+  resize_staging_for_years = year_count => {
+    const needed_height =
+      year_count * (year_block_height + year_block_padding) + stack_margin
+    if (this.staging_canvas.height === needed_height) {
+      return
+    }
+    this.staging_canvas.height = needed_height
+    this.scaling_canvas.height = needed_height
+  }
+
   draw = () => {
     // debounce
     if (this.scheduled_redraw) {
@@ -682,6 +716,14 @@ class Calendar {
     this.scheduled_redraw = true
     // console.log('redrawing')
     requestAnimationFrame(() => {
+      // Make sure at least the current year exists so an empty calendar still
+      // renders something, then draw every year we have, oldest first.
+      this.calendar_data.ensure_year(this.year)
+      const years = this.sorted_years()
+
+      // Grow the staging canvas to fit the full stack of years before drawing.
+      this.resize_staging_for_years(years.length)
+
       this.staging_context.fillStyle =
         this.calendar_data.visuals['background_color']
       this.staging_context.fillRect(
@@ -690,16 +732,19 @@ class Calendar {
         this.staging_canvas.width,
         this.staging_canvas.height
       )
-      // Make sure the displayed year exists before drawing it.
-      this.calendar_data.ensure_year(this.year)
-      this.draw_year(
-        5,
-        5,
-        this.calendar_data.year_data[this.year],
-        this.calendar_data.visuals['line_color'],
-        this.calendar_data.visuals['month_text_color'],
-        this.calendar_data.visuals['finished_day_color']
-      )
+
+      var year_y = stack_margin
+      for (const year of years) {
+        this.draw_year(
+          5,
+          year_y,
+          this.calendar_data.year_data[year],
+          this.calendar_data.visuals['line_color'],
+          this.calendar_data.visuals['month_text_color'],
+          this.calendar_data.visuals['finished_day_color']
+        )
+        year_y += year_block_height + year_block_padding
+      }
       this.scheduled_redraw = false
       this.render_page()
     })

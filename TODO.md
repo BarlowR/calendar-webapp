@@ -12,10 +12,11 @@ they land.
   `year_data['2025']`, and `src/main.js:15` initializes a new calendar with
   `initialize_new(2025, ...)`. Today is 2026, so the app is permanently stuck on
   2025 and "completed day" shading no longer makes sense. Drive the year from the
-  current date (or from a selectable/persisted "current year"). _Done: `Calendar`
-  now tracks `this.year` (defaults to the current year) and renders
-  `year_data[this.year]` via a new `ensure_year` guard; `main.js` initializes with
-  the current year. Multi-year navigation remains a follow-up (see Features)._
+  current date (or from a selectable/persisted "current year"). _Done: the
+  renderer now stacks **every** year in `year_data` (oldest first) instead of a
+  hardcoded one; an `ensure_year` guard seeds the current year so an empty
+  calendar still renders. `main.js` initializes with the current year. See
+  Multi-year support below._
 
 - [ ] **Google login popup is blocked** — `request_auth()` calls
   `client.requestAccessToken()` during page `load` (`src/main.js:46`,
@@ -24,13 +25,15 @@ they land.
   Google** button and call `requestAccessToken()` from its click handler. Keep
   the silent path only for already-cached, unexpired tokens.
 
-- [ ] **Dead/buggy scaling fast-path** — `src/components/calendar.js:158` reads
+- [x] **Dead/buggy scaling fast-path** — `src/components/calendar.js:158` reads
   `this.intermediary_scale_step`, but the value is a local `const`
   (`intermediary_scale_step`, line 157), so `this.intermediary_scale_step` is
   `undefined`. The `>` comparison is always false, making the high-zoom fast path
   dead code; if it ever did run, it references `intermediary_dim_x/y` before they
   are declared. Fix the reference (`this.` → local) and the variable ordering, or
-  delete the branch.
+  delete the branch. _Done: compare against the local `intermediary_scale_step`
+  and draw from the full staging canvas (not the undeclared `intermediary_dim_*`),
+  so the high-zoom path now skips the iterative downscale as intended._
 
 - [x] **`initialize_from_jsons` trusts `visuals`** —
   `src/components/calendar_data.js:81` does `this.visuals = json_obj.visuals`
@@ -100,9 +103,10 @@ they land.
 
 ## 🟢 Features
 
-- [ ] **Multi-year support** — Add previous/next-year navigation and store data
-  per year (the data model already keys by year; the renderer just needs to stop
-  hardcoding one). Pairs with the hardcoded-year bug above.
+- [~] **Multi-year support** — _Partly done: the renderer now stacks all years
+  in `year_data` vertically (oldest first), sizing the staging canvas to fit, and
+  click ids are year-scoped so stacked days don't collide. Still TODO:
+  previous/next-year navigation / a way to add a new year from the UI._
 - [ ] **Pinch-to-zoom on touch** — Only mouse `wheel` zoom and drag-to-pan are
   handled (`src/main.js`). Add touch pinch zoom for mobile.
 - [ ] **Keyboard navigation / a11y** — The calendar is canvas-only with no
