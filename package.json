@@ -8,13 +8,10 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "astro": "astro"
   },
   "devDependencies": {
-    "astro": "^5.6.1",
-    "gh-pages": "6.2.0"
+    "astro": "^5.6.1"
   },
-  "homepage": "https://barlowr.github.io/calendar-webapp/"
+  "homepage": "https://in-hindsight.app/"
 }
