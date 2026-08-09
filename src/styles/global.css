@@ -59,6 +59,33 @@ body {
   font-size: 20px;
 }
 
+/* Mirror image of the menu tab in the opposite corner. Hidden by default:
+   main.js only reveals it when there is no usable Google Drive token, and
+   hides it again as soon as one arrives. */
+#drive-sign-in {
+  display: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: min(200px, 45vw);
+  height: 60px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 60px;
+  border-top-right-radius: 8px;
+  background-color: #efefef;
+  border-top: 1px solid black;
+  border-right: 1px solid black;
+  font-family: "Tahoma";
+  /* A touch smaller than the menu tab so the longer label still fits inside
+     the 45vw the tab collapses to on a narrow phone. */
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+
 #menu {
   display:none;
   position: absolute;

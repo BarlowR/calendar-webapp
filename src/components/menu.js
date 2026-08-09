@@ -1,3 +1,5 @@
+import { DEFAULT_VISUALS, FINISHED_DAY_ALPHA } from './calendar_data.js'
+
 class Menu {
     constructor (menu_click, menu, calendar_data, gdrive_handler) {
         this.menu_click = menu_click
@@ -39,10 +41,10 @@ class Menu {
             },
             {
                 name: "Classic Beige",
-                background_color: "#e8dec9",
-                line_color: "#000000",
-                month_text_color: "#166709",
-                finished_day_color: "#674909"
+                background_color: DEFAULT_VISUALS.background_color,
+                line_color: DEFAULT_VISUALS.line_color,
+                month_text_color: DEFAULT_VISUALS.month_text_color,
+                finished_day_color: DEFAULT_VISUALS.finished_day_color.slice(0, 7)
             },
             {
                 name: "Ocean Blue",
@@ -81,7 +83,15 @@ class Menu {
             }
         ]
 
+        // Restore the previously selected theme index, falling back to 0
+        // (Custom) if it's missing or out of range.
         this.current_theme_index = 0
+        if ('theme_index' in localStorage) {
+            const stored_index = Number(localStorage['theme_index'])
+            if (Number.isInteger(stored_index) && stored_index >= 0 && stored_index < this.color_themes.length) {
+                this.current_theme_index = stored_index
+            }
+        }
 
         this.setup_event_listeners()
 
@@ -158,8 +168,8 @@ class Menu {
 
     update_finished_day_color = () => {
         const color = this.finished_day_color_input.value
-        // Apply a default alpha of 0.16 (16% transparency) to the selected color
-        const rgba_color = this.hexToRgba(color, 0.16)
+        // Apply the default alpha (16% transparency) to the selected color
+        const rgba_color = this.hexToRgba(color, FINISHED_DAY_ALPHA)
         this.calendar_data.visuals.finished_day_color = rgba_color
         this.save_and_sync()
         this.redraw()
@@ -171,6 +181,7 @@ class Menu {
     cycle_color_theme = () => {
         // Move to next theme
         this.current_theme_index = (this.current_theme_index + 1) % this.color_themes.length
+        localStorage['theme_index'] = this.current_theme_index
         const theme = this.color_themes[this.current_theme_index]
 
         // Handle custom theme differently
@@ -182,7 +193,7 @@ class Menu {
             this.calendar_data.visuals.background_color = theme.background_color
             this.calendar_data.visuals.line_color = theme.line_color
             this.calendar_data.visuals.month_text_color = theme.month_text_color
-            this.calendar_data.visuals.finished_day_color = this.hexToRgba(theme.finished_day_color, 0.16)
+            this.calendar_data.visuals.finished_day_color = this.hexToRgba(theme.finished_day_color, FINISHED_DAY_ALPHA)
 
             // Save and redraw
             this.save_and_sync()
@@ -223,6 +234,10 @@ class Menu {
         if (!file) {
             return
         }
+        if (!confirm('Importing will replace your current calendar data. Continue?')) {
+            this.import_file_input.value = ''
+            return
+        }
         const reader = new FileReader()
         reader.onload = () => {
             if (this.calendar_data.initialize_from_jsons(reader.result)) {
@@ -251,6 +266,7 @@ class Menu {
 
         // Switch to custom theme index
         this.current_theme_index = 0
+        localStorage['theme_index'] = this.current_theme_index
 
         // Update title to show custom theme
         this.update_colors_title("Custom")
@@ -259,12 +275,13 @@ class Menu {
     update_custom_theme = () => {
         // Update the custom theme with current visual settings
         const custom_theme = this.color_themes[0] // Custom is always first
-        custom_theme.background_color = this.calendar_data.visuals.background_color || "#e8dec9"
-        custom_theme.line_color = this.calendar_data.visuals.line_color || "#000000"
-        custom_theme.month_text_color = this.calendar_data.visuals.month_text_color || "#166709"
+        custom_theme.background_color = this.calendar_data.visuals.background_color || DEFAULT_VISUALS.background_color
+        custom_theme.line_color = this.calendar_data.visuals.line_color || DEFAULT_VISUALS.line_color
+        custom_theme.month_text_color = this.calendar_data.visuals.month_text_color || DEFAULT_VISUALS.month_text_color
 
         // Extract hex color from rgba finished_day_color
-        const finished_day_color = this.calendar_data.visuals.finished_day_color || "rgba(103, 73, 9, 0.16)"
+        const finished_day_color = this.calendar_data.visuals.finished_day_color ||
+            this.hexToRgba(DEFAULT_VISUALS.finished_day_color.slice(0, 7), FINISHED_DAY_ALPHA)
         custom_theme.finished_day_color = this.parseRgbaToHex(finished_day_color)
     }
 
@@ -296,23 +313,37 @@ class Menu {
         Object.entries(this.calendar_data.checkboxes).forEach(([name, color]) => {
             const checkbox_item = document.createElement('div')
             checkbox_item.className = 'checkbox-item'
-            checkbox_item.innerHTML = `
-                <span class="checkbox-name">${name}</span>
-                <input type="color" value="${color}" onchange="menu.update_checkbox_color('${name}', this.value)">
-                <button onclick="menu.remove_checkbox('${name}')" class="remove-btn">×</button>
-            `
+
+            const name_span = document.createElement('span')
+            name_span.className = 'checkbox-name'
+            name_span.textContent = name
+
+            const color_input = document.createElement('input')
+            color_input.type = 'color'
+            color_input.value = color
+            color_input.addEventListener('change', () => this.update_checkbox_color(name, color_input.value))
+
+            const remove_button = document.createElement('button')
+            remove_button.className = 'remove-btn'
+            remove_button.textContent = '×'
+            remove_button.addEventListener('click', () => this.remove_checkbox(name))
+
+            checkbox_item.appendChild(name_span)
+            checkbox_item.appendChild(color_input)
+            checkbox_item.appendChild(remove_button)
             this.existing_checkboxes_div.appendChild(checkbox_item)
         })
     }
 
     load_current_colors = () => {
         if (this.calendar_data.visuals) {
-            this.background_color_input.value = this.calendar_data.visuals.background_color || '#e8dec9'
-            this.line_color_input.value = this.calendar_data.visuals.line_color || '#000000'
-            this.month_text_color_input.value = this.calendar_data.visuals.month_text_color || '#166709'
+            this.background_color_input.value = this.calendar_data.visuals.background_color || DEFAULT_VISUALS.background_color
+            this.line_color_input.value = this.calendar_data.visuals.line_color || DEFAULT_VISUALS.line_color
+            this.month_text_color_input.value = this.calendar_data.visuals.month_text_color || DEFAULT_VISUALS.month_text_color
 
             // Parse finished day color to get just the hex part
-            const finished_day_color = this.calendar_data.visuals.finished_day_color || 'rgba(103, 73, 9, 0.16)'
+            const finished_day_color = this.calendar_data.visuals.finished_day_color ||
+                this.hexToRgba(DEFAULT_VISUALS.finished_day_color.slice(0, 7), FINISHED_DAY_ALPHA)
             const hex = this.parseRgbaToHex(finished_day_color)
             this.finished_day_color_input.value = hex
         }
@@ -335,7 +366,7 @@ class Menu {
         }
 
         // Default fallback
-        return '#674909'
+        return DEFAULT_VISUALS.finished_day_color.slice(0, 7)
     }
 
     save_and_sync = () => {

@@ -1,27 +1,6 @@
 function calc_days_in_month (month, year) {
-  // February
-  if (month == 2) {
-    if (year % 4 == 0) {
-      return 29
-    }
-    return 28
-  }
-
-  // Months with 31 days
-  if (
-    month == 1 ||
-    month == 3 ||
-    month == 5 ||
-    month == 7 ||
-    month == 8 ||
-    month == 10 ||
-    month == 12
-  ) {
-    return 31
-  }
-
-  // Months with 30 days
-  return 30
+  // Day 0 of next month is the last day of this month.
+  return new Date(year, month, 0).getDate()
 }
 
 // Default calendar colors. Used both when starting a fresh calendar and as a
@@ -32,6 +11,10 @@ const DEFAULT_VISUALS = {
   finished_day_color: '#67490929',
   background_color: '#e8dec9'
 }
+
+// Alpha applied to finished-day colors when built from a plain hex value
+// (0.16 * 255 ≈ 0x29, matching DEFAULT_VISUALS.finished_day_color above).
+const FINISHED_DAY_ALPHA = 0.16
 
 const month_name_mapping = {
   1: 'January',
@@ -190,4 +173,4 @@ class CalendarData {
   }
 }
 
-export { CalendarData, month_name_mapping }
+export { CalendarData, month_name_mapping, DEFAULT_VISUALS, FINISHED_DAY_ALPHA, calc_days_in_month }

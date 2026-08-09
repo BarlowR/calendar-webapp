@@ -31,24 +31,67 @@ function main() {
   menu.set_color(calendar_data.visuals["background_color"])
   menu.set_redraw(calendar.draw)
 
-  // Make menu globally accessible for HTML onclick handlers
-  window.menu = menu
-
   // Set the data handler redraw callback
   file_handler.set_redraw(() => {
     calendar.draw()
     menu.set_color(calendar_data.visuals["background_color"])
   })
-  // Create a authentication handler and register the file pull callback
-  var auth = new GoogleDriveAuth(file_handler.auth_callback)
-  
-  // Request authorization from the user
-  if (auth.request_auth()){
-    console.log("GDrive Authorization Success");
-  } else { 
-    // TODO: Pop-up that says, "Not syncing with google"
-  }
   register_event_handlers(calendar, calendar_canvas_div)
+  setup_drive_sync(file_handler)
+}
+
+function setup_drive_sync(file_handler) {
+  // Connect to Google Drive, asking the user to sign in only if we can't do it
+  // silently. Everything in here is best-effort: the calendar works fine with
+  // no Google at all (blocked script, offline, declined consent), so no failure
+  // may escape this function.
+  const sign_in_div = document.getElementById("drive-sign-in")
+  const show_sign_in = (visible) => {
+    if (sign_in_div) {
+      sign_in_div.style.display = visible ? "block" : "none"
+    }
+  }
+
+  // Create an authentication handler and register the file pull callback. This
+  // fires for both the cached token and a freshly granted one; either way we
+  // now have a token, so the sign-in prompt has done its job.
+  var auth = new GoogleDriveAuth((access_token) => {
+    show_sign_in(false)
+    file_handler.auth_callback(access_token)
+  })
+
+  // A cached, unexpired token needs no popup, so it can be used at load.
+  if (auth.request_silent_auth()) {
+    console.log("GDrive Authorization Success")
+    return
+  }
+
+  // No usable token. Opening the OAuth popup from here would get it blocked by
+  // the browser (page load is not a user gesture), so offer a button instead
+  // and let the click carry the gesture into requestAccessToken.
+  // TODO: Pop-up that says, "Not syncing with google"
+  if (!sign_in_div) {
+    console.error("No sign-in element found; not syncing with Google Drive")
+    return
+  }
+
+  const start_sign_in = () => {
+    // On success the auth callback above hides the button. On failure it stays
+    // put so the user (or a late-loading GSI script) can try again.
+    if (!auth.request_auth()) {
+      console.error("Could not start Google Drive sign-in")
+    }
+  }
+  sign_in_div.onclick = start_sign_in
+  sign_in_div.onkeydown = (e) => {
+    // Keyboard activation counts as a user gesture too, so the popup is
+    // allowed here as well.
+    if (e.key == "Enter" || e.key == " ") {
+      e.preventDefault()
+      start_sign_in()
+    }
+  }
+  show_sign_in(true)
 }
 
 function register_event_handlers(calendar, calendar_canvas) {

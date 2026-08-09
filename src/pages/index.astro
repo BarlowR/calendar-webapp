@@ -26,6 +26,10 @@ import "../styles/global.css";
     <div id="container">
       <canvas id="calendar-canvas"></canvas>
       <div id="menu-open"> - Menu - </div>
+      <!-- Hidden until main.js finds no cached Drive token. The OAuth popup
+           has to be opened from this element's click handler; opening it at
+           page load gets it blocked by the browser. -->
+      <div id="drive-sign-in" role="button" tabindex="0">Sign in to sync</div>
       <div id="menu">
         <div id="menu-display">
           <h3>Settings</h3>

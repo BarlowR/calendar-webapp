@@ -54,26 +54,8 @@ function mouse_to_scaled_translated_canvas (
 }
 
 function starting_weekday (month, year) {
-  const day = 1
-  // The first day of each month in 1899
-  // January = 0
-  // Days are encoded as seen in the array above
-  var monthDay = [1, 4, 4, 0, 2, 5, 0, 3, 6, 1, 4, 6]
-
-  // The calculation, from https://youtu.be/qkkfRHaHFjQ
-
-  // Number of years sice 1900
-  var years = year - 1900
-  // 365%7 = 1, so each year any given date will shift a day of the week.
-  // Every 4 years a leap day is added to a year, so a date will shift 2 days instead
-  // then add the day's date number. This is always at least 1, that's why we count
-  // the number of years since 1900 and not 1899.
-  // To get the weekday's index divide that number by 7 and take whatever is left.
-  var day_of_week =
-    (monthDay[month - 1] + years + (Math.floor(years / 4) + day) - 2) % 7
-
-  // Returns the weekday (Monday is 0)
-  return day_of_week
+  // Weekday of the 1st of the month, Monday = 0 (Date.getDay() is Sunday = 0).
+  return (new Date(year, month - 1, 1).getDay() + 6) % 7
 }
 
 class Calendar {
@@ -796,4 +778,4 @@ class Calendar {
   }
 }
 
-export { Calendar }
+export { Calendar, starting_weekday }
