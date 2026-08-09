@@ -2,6 +2,10 @@ import { CalendarData, month_name_mapping } from './calendar_data.js'
 
 const canvas_dim = 2000
 const screen_offset_clamp_buffer = 100
+// Zoom limits. The minimum is low enough that a full year fits the width of a
+// phone screen.
+const min_scale = 0.02
+const max_scale = 3
 const day_size = 350
 const default_line_width = 4
 const month_padding = 60
@@ -138,9 +142,18 @@ class Calendar {
       this.viewport_y = Number(localStorage['view_y'])
       if (isNaN(this.viewport_y)) this.viewport_y = 0
     }
-    this.viewport_scale = 0.5
     if ('view_scale' in localStorage) {
       this.viewport_scale = Number(localStorage['view_scale'])
+      if (isNaN(this.viewport_scale)) this.viewport_scale = 0.5
+    } else {
+      // First visit: fit the calendar's width to the screen and center it, so
+      // small screens start with the whole year in view instead of a
+      // zoomed-in corner.
+      const fit_scale = this.view_width / this.staging_canvas.width
+      this.viewport_scale = Math.min(Math.max(fit_scale, min_scale), 0.5)
+      this.viewport_x =
+        (this.view_width - this.staging_canvas.width * this.viewport_scale) / 2
+      this.viewport_y = 10
     }
   }
 
@@ -272,32 +285,33 @@ class Calendar {
   }
 
   update_scale = e => {
-    // Translate the current mouse position to a reference position in the calendar frame
+    // Zoom from y scroll, anchored at the mouse position
+    this.zoom_at(this.mouse_x, this.mouse_y, this.viewport_scale - e.deltaY / 2000)
+  }
+
+  // Set the zoom to new_scale, keeping the calendar point under the screen
+  // position (x, y) fixed. Used by both wheel zoom and touch pinch.
+  zoom_at = (x, y, new_scale) => {
+    // Translate the anchor position to a reference position in the calendar frame
     const [original_x, original_y] = mouse_to_scaled_translated_canvas(
-      this.mouse_x,
-      this.mouse_y,
+      x,
+      y,
       this.viewport_x,
       this.viewport_y,
       this.viewport_scale
     )
 
-    // Update scale from y scroll
-    this.viewport_scale -= e.deltaY / 2000
-    // Clamp scroll value
-    if (this.viewport_scale <= 0.05) {
-      this.viewport_scale = 0.05
-    } else if (this.viewport_scale >= 3) {
-      this.viewport_scale = 3
-    }
+    // Clamp the new scale
+    this.viewport_scale = Math.min(Math.max(new_scale, min_scale), max_scale)
 
-    // Translate the reference position in the calendar frame back into the mouse frame to see where it now exists after the scale
+    // Translate the reference position in the calendar frame back into the anchor frame to see where it now exists after the scale
     const new_x = original_x * this.viewport_scale + this.viewport_x
     const new_y = original_y * this.viewport_scale + this.viewport_y
     // Set localStorage
     localStorage['view_scale'] = this.viewport_scale
 
-    // Update the viewport offet by the difference in reference position by scaling so that the reference position stays constant.
-    this.update_offset(this.mouse_x - new_x, this.mouse_y - new_y)
+    // Update the viewport offset by the difference in reference position by scaling so that the reference position stays constant.
+    this.update_offset(x - new_x, y - new_y)
     this.render_page()
   }
 

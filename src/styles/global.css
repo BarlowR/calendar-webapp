@@ -1,6 +1,16 @@
+:root {
+  /* Sidebar widths shrink on narrow screens, leaving a strip of calendar
+     visible so tapping outside still closes them. */
+  --day-sidebar-width: min(300px, 85vw);
+  --menu-width: min(350px, 85vw);
+}
+
+html,
 body {
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #container{
@@ -17,21 +27,26 @@ body {
 #calendar-canvas{
   display: block;
   width: 100%;
-  min-width: 800px;
   /* Use a definite viewport height. `height: 100%` collapses to auto here
      (no ancestor has a definite height), which would make the canvas fall back
-     to its intrinsic attribute ratio and leave the bottom of the screen blank. */
+     to its intrinsic attribute ratio and leave the bottom of the screen blank.
+     dvh tracks the visible height on mobile as the URL bar shows/hides; the
+     vh line is the fallback for older browsers. */
   height: 100vh;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   border: none;
+  /* All panning/pinching on the calendar is handled in JS; without this the
+     browser consumes touch moves for page scroll/zoom. */
+  touch-action: none;
 }
 
 #menu-open {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 200px;
+  width: min(200px, 45vw);
   height: 60px;
   text-align: center;
   vertical-align: middle;
@@ -49,8 +64,10 @@ body {
   position: absolute;
   right: 0;
   top: 0;
-  width: 350px;
+  width: var(--menu-width);
   height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
 }
 
 #menu-display {
@@ -64,8 +81,10 @@ body {
   left: 0;
   top: 0;
   background-color: rgba(255,255,255,0.9);
-  width: 300px;
+  width: var(--day-sidebar-width);
   height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
 }
 
 #text-entry-display{
@@ -135,28 +154,33 @@ body {
 }
 
 
+/* Invisible strips covering the calendar next to an open sidebar/menu;
+   clicking them closes the panel. position: fixed keeps them out of the
+   panels' own scroll overflow. */
 #day-click-capture{
   display: none;
-  position: absolute;
-  left: 400px;
+  position: fixed;
+  left: var(--day-sidebar-width);
   top: 0;
   padding: 0;
   margin: 0;
   background-color: #FFFFFF00;
-  width: calc(100vw - 300px);
+  width: calc(100vw - var(--day-sidebar-width));
   height: 100vh;
+  height: 100dvh;
 }
 
 #menu-click-capture{
   display: none;
-  position: absolute;
-  right: 350px;
+  position: fixed;
+  right: var(--menu-width);
   top: 0;
   padding: 0;
   margin: 0;
   background-color: #FFFFFF00;
-  width: calc(100vw - 350px);
+  width: calc(100vw - var(--menu-width));
   height: 100vh;
+  height: 100dvh;
 }
 
 /* Menu styling */

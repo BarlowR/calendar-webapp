@@ -52,45 +52,77 @@ function main() {
 }
 
 function register_event_handlers(calendar, calendar_canvas) {
-  // Register event handlers
-  var drag_in_progress = false;
-  var start_x, start_y;
+  // Pointer Events unify mouse and touch (TouchEvents don't carry
+  // clientX/clientY, which the old mouse-centric handlers relied on).
+  // Pointers currently pressed on the calendar, by pointerId.
+  const active_pointers = new Map();
+  // Total distance travelled since the first pointer went down; a press that
+  // releases without meaningful movement is a tap/click on a day.
+  var tap_travel = 0;
+  const tap_travel_max = 10;
+  // Distance and midpoint of the two pinch pointers.
+  var pinch = null;
 
-  // Begin dragging if the user touches or clicks
-  calendar_canvas.ontouchstart = calendar_canvas.onmousedown = (e) => {
-    drag_in_progress = true;
-    start_x = e.clientX;
-    start_y = e.clientY;
-
-    // Check if the user has moved after clicking. If not, then the user has clicked on something and isn't dragging
-    setTimeout(() => {
-      if (start_x == e.clientX && start_y == e.clientY && !drag_in_progress){
-        calendar.onclick(e);
-      }
-    }, 200)
-  }
-  
-  // End dragging if the user stops clicking or touching
-  window.ontouchend = window.onmouseup = (e) => {
-    drag_in_progress = false;
+  const measure_pinch = () => {
+    const [p1, p2] = [...active_pointers.values()];
+    return {
+      dist: Math.hypot(p1.x - p2.x, p1.y - p2.y),
+      x: (p1.x + p2.x) / 2,
+      y: (p1.y + p2.y) / 2,
+    };
   }
 
-  // Track mouse movement
-  window.ontouchmove = window.onmousemove = (e) => {
+  calendar_canvas.onpointerdown = (e) => {
+    // Keep receiving move/up events even when the pointer leaves the canvas
+    calendar_canvas.setPointerCapture(e.pointerId);
+    active_pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (active_pointers.size == 1) {
+      tap_travel = 0;
+    } else if (active_pointers.size == 2) {
+      pinch = measure_pinch();
+    }
+  }
+
+  window.onpointermove = (e) => {
+    // Track the hover position for wheel zoom
     calendar.set_interact_position(e);
-    if (!drag_in_progress){
+    if (!active_pointers.has(e.pointerId)) {
       return;
     }
-    // Calculate the difference since the last event
-    const delta_x = e.clientX - start_x;
-    const delta_y = e.clientY - start_y;
-    // Update the offset
-    calendar.update_offset(delta_x, delta_y);
-    // Set the current position
-    start_x = e.clientX;
-    start_y = e.clientY;
-    // Queue a new render
-    calendar.render_to_display_context()
+    const prev = active_pointers.get(e.pointerId);
+    active_pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    tap_travel += Math.abs(e.clientX - prev.x) + Math.abs(e.clientY - prev.y);
+
+    if (active_pointers.size == 1) {
+      // One pointer: pan
+      calendar.update_offset(e.clientX - prev.x, e.clientY - prev.y);
+      calendar.render_page();
+    } else if (active_pointers.size == 2 && pinch) {
+      // Two pointers: pan with the midpoint, zoom with the spread
+      const new_pinch = measure_pinch();
+      calendar.update_offset(new_pinch.x - pinch.x, new_pinch.y - pinch.y);
+      if (pinch.dist > 0) {
+        calendar.zoom_at(
+          new_pinch.x,
+          new_pinch.y,
+          calendar.viewport_scale * (new_pinch.dist / pinch.dist)
+        );
+      }
+      pinch = new_pinch;
+    }
+  }
+
+  window.onpointerup = window.onpointercancel = (e) => {
+    if (!active_pointers.has(e.pointerId)) {
+      return;
+    }
+    const was_only_pointer = active_pointers.size == 1;
+    active_pointers.delete(e.pointerId);
+    pinch = null;
+    // A single press released without movement is a tap on a day
+    if (e.type == 'pointerup' && was_only_pointer && tap_travel < tap_travel_max) {
+      calendar.onclick(e);
+    }
   }
 
   // Handle resizes
@@ -98,11 +130,13 @@ function register_event_handlers(calendar, calendar_canvas) {
     calendar.resize(e);
   }
 
-  window.addEventListener('wheel', (e) => {
+  // Zoom with the scroll wheel / trackpad. Registered on the canvas only, so
+  // the menu and day sidebar keep their normal scrolling.
+  calendar_canvas.addEventListener('wheel', (e) => {
     // Prevent default scrolling behavior
-    e.preventDefault();  
+    e.preventDefault();
     // Update scale
-    calendar.update_scale(e); 
+    calendar.update_scale(e);
   }, { passive: false }); // Required for preventing default behavior
 }
 window.addEventListener('load', main)
