@@ -45,10 +45,12 @@ function setup_drive_sync(file_handler) {
   // silently. Everything in here is best-effort: the calendar works fine with
   // no Google at all (blocked script, offline, declined consent), so no failure
   // may escape this function.
-  const sign_in_div = document.getElementById("drive-sign-in")
-  const show_sign_in = (visible) => {
-    if (sign_in_div) {
-      sign_in_div.style.display = visible ? "block" : "none"
+  const overlay = document.getElementById("sign-in-overlay")
+  const sign_in_button = document.getElementById("drive-sign-in")
+  const offline_button = document.getElementById("continue-offline")
+  const show_overlay = (visible) => {
+    if (overlay) {
+      overlay.style.display = visible ? "flex" : "none"
     }
   }
 
@@ -56,7 +58,7 @@ function setup_drive_sync(file_handler) {
   // fires for both the cached token and a freshly granted one; either way we
   // now have a token, so the sign-in prompt has done its job.
   var auth = new GoogleDriveAuth((access_token) => {
-    show_sign_in(false)
+    show_overlay(false)
     file_handler.auth_callback(access_token)
   })
 
@@ -67,31 +69,27 @@ function setup_drive_sync(file_handler) {
   }
 
   // No usable token. Opening the OAuth popup from here would get it blocked by
-  // the browser (page load is not a user gesture), so offer a button instead
-  // and let the click carry the gesture into requestAccessToken.
-  // TODO: Pop-up that says, "Not syncing with google"
-  if (!sign_in_div) {
-    console.error("No sign-in element found; not syncing with Google Drive")
+  // the browser (page load is not a user gesture), so cover the page with a
+  // sign-in prompt instead and let the click carry the gesture into
+  // requestAccessToken. The overlay stays up until the user signs in or
+  // explicitly declines with the continue-offline button.
+  if (!overlay || !sign_in_button || !offline_button) {
+    console.error("Sign-in overlay elements missing; not syncing with Google Drive")
     return
   }
 
-  const start_sign_in = () => {
-    // On success the auth callback above hides the button. On failure it stays
-    // put so the user (or a late-loading GSI script) can try again.
+  sign_in_button.onclick = () => {
+    // On success the auth callback above hides the overlay. On failure it
+    // stays put so the user (or a late-loading GSI script) can try again.
     if (!auth.request_auth()) {
       console.error("Could not start Google Drive sign-in")
     }
   }
-  sign_in_div.onclick = start_sign_in
-  sign_in_div.onkeydown = (e) => {
-    // Keyboard activation counts as a user gesture too, so the popup is
-    // allowed here as well.
-    if (e.key == "Enter" || e.key == " ") {
-      e.preventDefault()
-      start_sign_in()
-    }
+  offline_button.onclick = () => {
+    console.log("User declined Google Drive sign-in; continuing offline")
+    show_overlay(false)
   }
-  show_sign_in(true)
+  show_overlay(true)
 }
 
 function register_event_handlers(calendar, calendar_canvas) {

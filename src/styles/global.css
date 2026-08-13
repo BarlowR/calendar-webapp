@@ -59,31 +59,58 @@ body {
   font-size: 20px;
 }
 
-/* Mirror image of the menu tab in the opposite corner. Hidden by default:
-   main.js only reveals it when there is no usable Google Drive token, and
-   hides it again as soon as one arrives. */
-#drive-sign-in {
+/* Full-page sign-in prompt. Hidden by default: main.js only reveals it when
+   there is no usable Google Drive token, and hides it when a token arrives or
+   the user explicitly declines. Shown with display: flex. */
+#sign-in-overlay {
   display: none;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: min(200px, 45vw);
-  height: 60px;
-  text-align: center;
-  vertical-align: middle;
-  line-height: 60px;
-  border-top-right-radius: 8px;
-  background-color: #efefef;
-  border-top: 1px solid black;
-  border-right: 1px solid black;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.95);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
   font-family: "Tahoma";
-  /* A touch smaller than the menu tab so the longer label still fits inside
-     the 45vw the tab collapses to on a narrow phone. */
-  font-size: 17px;
-  white-space: nowrap;
-  overflow: hidden;
+  text-align: center;
+}
+
+#sign-in-overlay h1 {
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: normal;
+  margin: 0;
+}
+
+#sign-in-overlay p {
+  font-size: clamp(16px, 3vw, 22px);
+  margin: 0;
+}
+
+#drive-sign-in {
+  width: min(90vw, 700px);
+  height: min(45vh, 350px);
+  font-size: clamp(28px, 6vw, 48px);
+  font-family: "Tahoma";
+  background-color: #efefef;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 8px;
   cursor: pointer;
-  user-select: none;
+}
+
+/* Deliberately quiet next to the sign-in button: continuing offline is the
+   fallback, not the main path. */
+#continue-offline {
+  background: none;
+  border: none;
+  font-family: "Tahoma";
+  font-size: 18px;
+  color: #000000;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 #menu {

@@ -27,9 +27,15 @@ import "../styles/global.css";
       <canvas id="calendar-canvas"></canvas>
       <div id="menu-open"> - Menu - </div>
       <!-- Hidden until main.js finds no cached Drive token. The OAuth popup
-           has to be opened from this element's click handler; opening it at
-           page load gets it blocked by the browser. -->
-      <div id="drive-sign-in" role="button" tabindex="0">Sign in to sync</div>
+           has to be opened from the sign-in button's click handler; opening it
+           at page load gets it blocked by the browser. The overlay blocks the
+           calendar until the user either signs in or explicitly declines. -->
+      <div id="sign-in-overlay">
+        <h1>In Hindsight</h1>
+        <p>Sign in with Google to sync your calendar with Drive.</p>
+        <button id="drive-sign-in">Sign in to sync</button>
+        <button id="continue-offline">No thanks, continue offline</button>
+      </div>
       <div id="menu">
         <div id="menu-display">
           <h3>Settings</h3>
