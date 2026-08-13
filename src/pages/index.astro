@@ -26,6 +26,9 @@ import "../styles/global.css";
     <div id="container">
       <canvas id="calendar-canvas"></canvas>
       <div id="menu-open"> - Menu - </div>
+      <!-- Drive sync state tab (bottom-left, mirror of the menu tab). While
+           signed out or errored, clicking it reopens the sign-in page. -->
+      <button id="sync-status" data-state="offline">Not syncing</button>
       <!-- Hidden until main.js finds no cached Drive token. The OAuth popup
            has to be opened from the sign-in button's click handler; opening it
            at page load gets it blocked by the browser. The overlay blocks the

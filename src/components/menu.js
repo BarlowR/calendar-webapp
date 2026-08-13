@@ -389,6 +389,9 @@ class Menu {
     set_color = (background_color) => {
         this.color = background_color
         this.menu_click.style.backgroundColor = this.color
+        // The sync-status tab in the opposite corner reads this variable so
+        // both corner tabs follow the theme together.
+        document.documentElement.style.setProperty('--corner-tab-color', this.color)
         // Menu background stays white/grey like day entry sidebar
         this.menu.style.backgroundColor = `rgba(255,255,255,0.9)`
     }

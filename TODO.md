@@ -62,10 +62,15 @@ they land.
   of the current data before applying an import. _Confirmation dialog done;
   auto-export backup still open._
 
-- [ ] **Surface Drive sync status** — Several `// TODO: pop-up that says "Not
+- [x] **Surface Drive sync status** — Several `// TODO: pop-up that says "Not
   syncing with google"` comments exist (`src/main.js:49`,
   `src/components/drive_sync.js`). Add a small status indicator (synced / signed
-  out / error) so users know whether their data is backed up.
+  out / error) so users know whether their data is backed up. _Done: a
+  bottom-left corner tab (mirror of the menu tab) shows Not syncing / Syncing… /
+  Synced / Sync error, driven by a status listener on the file handler. While
+  signed out or errored, clicking the tab reopens the sign-in page (with a
+  still-valid token the silent path re-pulls the file, so it doubles as a
+  retry)._
 
 - [x] **Modernize `drive_sync.js`** — Replace `XMLHttpRequest` with `fetch` +
   `async/await`, and stop putting `access_token` in URL query strings

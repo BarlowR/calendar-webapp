@@ -59,6 +59,59 @@ body {
   font-size: 20px;
 }
 
+/* Mirror of the menu tab in the opposite corner, showing Drive sync state.
+   The dot color tracks the data-state attribute set from main.js. */
+#sync-status {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: min(170px, 42vw);
+  height: 60px;
+  border: none;
+  border-top: 1px solid black;
+  border-right: 1px solid black;
+  border-top-right-radius: 8px;
+  /* Matches the menu tab: menu.js keeps this variable at the theme's
+     background color. */
+  background-color: var(--corner-tab-color, #efefef);
+  color: #000000;
+  font-family: "Tahoma";
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+#sync-status::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: -1px;
+  background-color: #9e9e9e;
+}
+
+#sync-status[data-state="syncing"]::before {
+  background-color: #f5b32e;
+}
+
+#sync-status[data-state="synced"]::before {
+  background-color: #51a145;
+}
+
+#sync-status[data-state="error"]::before {
+  background-color: #cc3333;
+}
+
+/* Only the states where clicking does something (reopen sign-in) get a
+   pointer cursor. */
+#sync-status[data-state="offline"],
+#sync-status[data-state="error"] {
+  cursor: pointer;
+}
+
 /* Full-page sign-in prompt. Hidden by default: main.js only reveals it when
    there is no usable Google Drive token, and hides it when a token arrives or
    the user explicitly declines. Shown with display: flex. */

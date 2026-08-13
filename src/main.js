@@ -48,9 +48,36 @@ function setup_drive_sync(file_handler) {
   const overlay = document.getElementById("sign-in-overlay")
   const sign_in_button = document.getElementById("drive-sign-in")
   const offline_button = document.getElementById("continue-offline")
+  const status_button = document.getElementById("sync-status")
   const show_overlay = (visible) => {
     if (overlay) {
       overlay.style.display = visible ? "flex" : "none"
+    }
+  }
+
+  // The corner tab tracks what sync is doing so the user knows whether their
+  // data is backed up. While signed out or errored, clicking it reopens the
+  // sign-in page — with a still-valid token the sign-in button's silent path
+  // succeeds immediately and re-pulls the file, so it doubles as a retry.
+  const status_labels = {
+    offline: "Not syncing",
+    syncing: "Syncing…",
+    synced: "Synced",
+    error: "Sync error",
+  }
+  const set_status = (state) => {
+    if (status_button && status_labels[state]) {
+      status_button.textContent = status_labels[state]
+      status_button.dataset.state = state
+    }
+  }
+  file_handler.set_status_listener(set_status)
+  if (status_button) {
+    status_button.onclick = () => {
+      const state = status_button.dataset.state
+      if (state == "offline" || state == "error") {
+        show_overlay(true)
+      }
     }
   }
 

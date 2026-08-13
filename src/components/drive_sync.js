@@ -162,7 +162,7 @@ class GoogleDriveAuth {
       client.requestAccessToken()
       return true
     } catch (error) {
-      // TODO: popup that says that you can't sync to drive
+      // No token, so the sync-status tab stays in its signed-out state.
       console.error('Could not authenticate', error)
       return false
     }
@@ -175,6 +175,9 @@ class GoogleDriveCalendarFileHandler {
     this.file_id = ''
     this.calendar_data = calendar_data
     this.redraw = () => {}
+    // Called with 'offline' | 'syncing' | 'synced' | 'error' whenever the
+    // sync state changes, so the UI can show whether data is backed up.
+    this.status_listener = () => {}
 
     // Debounced-upload state. `pending_json_string` holds the newest string we
     // have been handed but not yet written; the timer is re-armed on every new
@@ -192,9 +195,23 @@ class GoogleDriveCalendarFileHandler {
     this.redraw = f
   }
 
+  set_status_listener = f => {
+    this.status_listener = f
+  }
+
+  report_status = state => {
+    // Status display is best-effort; a broken listener must not break sync.
+    try {
+      this.status_listener(state)
+    } catch (error) {
+      console.error('Sync status listener failed', error)
+    }
+  }
+
   auth_callback = access_token => {
     // set the access token and try to pull the calendar data from google drive
     this.access_token = access_token
+    this.report_status('syncing')
     this.check_for_file()
   }
 
@@ -253,6 +270,7 @@ class GoogleDriveCalendarFileHandler {
 
       if (!response.ok) {
         await log_http_error('file listing', response)
+        this.report_status('error')
         return
       }
 
@@ -274,11 +292,16 @@ class GoogleDriveCalendarFileHandler {
       }
 
       if (found_calendar_file) {
-        await this.found_file()
+        // 'synced' also covers the no-file case: we are connected and the
+        // first save will create the file.
+        this.report_status((await this.found_file()) ? 'synced' : 'error')
+      } else {
+        this.report_status('synced')
       }
       await Promise.all(stale_deletes)
     } catch (error) {
       console.error('Google Drive file listing failed', error)
+      this.report_status('error')
     }
   }
 
@@ -295,6 +318,7 @@ class GoogleDriveCalendarFileHandler {
     // most recent string we were handed.
     if (!this.access_token) {
       console.error('Cannot sync to Google Drive: no access token')
+      this.report_status('offline')
       return false
     }
 
@@ -303,6 +327,7 @@ class GoogleDriveCalendarFileHandler {
       clearTimeout(this.upload_timer)
     }
     this.upload_timer = setTimeout(this.flush_pending_upload, UPLOAD_DEBOUNCE_MS)
+    this.report_status('syncing')
     return true
   }
 
@@ -329,10 +354,21 @@ class GoogleDriveCalendarFileHandler {
     this.upload_in_flight = true
 
     this.write_json_string(string)
+      .then(ok => {
+        if (!ok) {
+          this.report_status('error')
+        } else if (this.pending_json_string === null) {
+          // Nothing new was queued while this write was in flight, so the
+          // newest data really is on Drive. Otherwise stay 'syncing' until
+          // the re-armed timer writes the newer string.
+          this.report_status('synced')
+        }
+      })
       .catch(error => {
         // write_json_string handles its own errors; this is the last line of
         // defence against an unhandled rejection.
         console.error('Google Drive upload failed unexpectedly', error)
+        this.report_status('error')
       })
       .finally(() => {
         this.upload_in_flight = false
