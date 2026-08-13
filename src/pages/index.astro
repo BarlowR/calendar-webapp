@@ -31,10 +31,12 @@ import "../styles/global.css";
            at page load gets it blocked by the browser. The overlay blocks the
            calendar until the user either signs in or explicitly declines. -->
       <div id="sign-in-overlay">
-        <h1>In Hindsight</h1>
-        <p>Sign in with Google to sync your calendar with Drive.</p>
-        <button id="drive-sign-in">Sign in to sync</button>
-        <button id="continue-offline">No thanks, continue offline</button>
+        <div id="sign-in-content">
+          <h1>In Hindsight</h1>
+          <p>Sign in with Google to sync your calendar with Drive.</p>
+          <button id="drive-sign-in">Sign in to sync</button>
+          <button id="continue-offline">No thanks, continue offline</button>
+        </div>
       </div>
       <div id="menu">
         <div id="menu-display">

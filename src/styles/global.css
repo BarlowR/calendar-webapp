@@ -69,13 +69,29 @@ body {
   z-index: 10;
   background-color: rgba(255, 255, 255, 0.95);
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
+  /* Scroll (rather than clip) when the content is taller than a short
+     landscape phone screen; without this the decline button can end up
+     unreachable below the fold. pan-y still allows that scroll but disables
+     double-tap zoom, so button taps register immediately. */
+  overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
   padding: 20px;
   box-sizing: border-box;
   font-family: "Tahoma";
   text-align: center;
+}
+
+#sign-in-content {
+  /* Auto margins center the content when it fits but, unlike
+     justify-content: center on the overlay, keep the top edge reachable by
+     scrolling when it overflows. */
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
 }
 
 #sign-in-overlay h1 {
@@ -90,8 +106,9 @@ body {
 }
 
 #drive-sign-in {
-  width: min(90vw, 700px);
+  width: min(100%, 700px);
   height: min(45vh, 350px);
+  height: min(45dvh, 350px);
   font-size: clamp(28px, 6vw, 48px);
   font-family: "Tahoma";
   background-color: #efefef;
@@ -99,10 +116,11 @@ body {
   border: 1px solid #000000;
   border-radius: 8px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 /* Deliberately quiet next to the sign-in button: continuing offline is the
-   fallback, not the main path. */
+   fallback, not the main path. Padded to a comfortable touch-target size. */
 #continue-offline {
   background: none;
   border: none;
@@ -111,6 +129,8 @@ body {
   color: #000000;
   text-decoration: underline;
   cursor: pointer;
+  padding: 12px 20px;
+  touch-action: manipulation;
 }
 
 #menu {

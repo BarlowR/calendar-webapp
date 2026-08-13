@@ -114,8 +114,18 @@ function register_event_handlers(calendar, calendar_canvas) {
   }
 
   calendar_canvas.onpointerdown = (e) => {
-    // Keep receiving move/up events even when the pointer leaves the canvas
-    calendar_canvas.setPointerCapture(e.pointerId);
+    // Keep receiving move/up events even when the pointer leaves the canvas.
+    // Mouse only: touch pointers are already implicitly captured to their
+    // target, and explicitly re-capturing them has shipped Safari bugs where
+    // the rest of the gesture stops being delivered. Best-effort besides — a
+    // throw here would otherwise kill all pan/pinch for the touch.
+    if (e.pointerType == "mouse") {
+      try {
+        calendar_canvas.setPointerCapture(e.pointerId);
+      } catch (err) {
+        // Worst case a drag drops at the canvas edge.
+      }
+    }
     active_pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (active_pointers.size == 1) {
       tap_travel = 0;
@@ -170,6 +180,17 @@ function register_event_handlers(calendar, calendar_canvas) {
   window.onresize = (e) => {
     calendar.resize(e);
   }
+
+  // iOS Safari implements page pinch-zoom with proprietary gesture events
+  // that don't consult touch-action, so it can hijack two-finger pinches
+  // before the pointer handlers above see them. Cancel them on the canvas;
+  // the menu and day sidebar keep native behavior.
+  for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+    calendar_canvas.addEventListener(type, (e) => e.preventDefault());
+  }
+  // Same belt-and-braces for browsers that still start a native scroll/zoom
+  // from touchmove despite the canvas's touch-action: none.
+  calendar_canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
   // Zoom with the scroll wheel / trackpad. Registered on the canvas only, so
   // the menu and day sidebar keep their normal scrolling.
